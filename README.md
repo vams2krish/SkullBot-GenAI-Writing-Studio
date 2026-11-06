@@ -1,146 +1,337 @@
-# SkullBot [GenAI / DL-powered application]
+# SkullBot — Good writing has good bones.
 
-**Good writing has good bones.** A monochrome writing studio for turning a rough draft into clear, properly attributed writing. Built with React 19, Next.js-compatible Vinext, Tailwind CSS 4, shadcn/ui, Radix UI, and a Cloudflare Worker backend.
+A writing studio for ideas, clearer drafts, source review, and academic documents. **Chat, paraphrase, proofread, summarize, organize citations, format APA papers, and inspect similarity in one workspace.**
 
-![SkullBot writing workspace](docs/skullbot-workspace.png)
+[Open the private app](https://skullbot-writing-lab.adam-vamshikrishna.chatgpt.site) · [Run locally](#run-locally) · [Product showcases](#product-showcases-with-real-examples) · [Architecture](docs/detection/ARCHITECTURE.md) · [Verification](docs/detection/VERIFICATION.md)
 
-[Open SkullBot](https://skullbot-writing-lab.adam-vamshikrishna.chatgpt.site) · [Source repository](https://github.com/vams2krish/SkullBot-GenAI-Writing-Studio)
+[![Checks](https://github.com/vams2krish/SkullBot-GenAI-Writing-Studio/actions/workflows/check.yml/badge.svg)](https://github.com/vams2krish/SkullBot-GenAI-Writing-Studio/actions/workflows/check.yml)
 
-The hosted app is private to its owner. This repository is public. Forks need their own server credentials and hosting identity.
+![SkullBot Chat producing leadership themes and evidence placeholders](docs/showcase/01-chat.jpg)
 
-## Project classification
+The hosted app is owner-private; this source repository is public. The optional Python detection service currently runs **locally**, by the owner's choice. Hosted fingerprint matching works without it; hosted neural and semantic results accurately show unavailable until a reachable backend is connected.
 
-**Type: writing application with generative editing and independent detection services.** OpenRouter powers generation. Fingerprint similarity is deterministic; the optional Python service runs actual pretrained embedding/classification models and includes a supervised improvement path. No original trained classifier or validated commercial accuracy is bundled. Citation templates and formatting remain deterministic.
+## Everything in the workspace
 
-## Features and implementation status
+| Feature | What you can do | How it runs |
+| --- | --- | --- |
+| **SkullBot Chat** | Ask questions, develop outlines, follow up, copy/regenerate answers, stop generation, start a new chat | OpenRouter; optional device chat storage |
+| **Paraphraser** | Standard, Fluency, Humanize, Formal, Academic, Simple, Creative; rewrite intensity 0–100 | OpenRouter |
+| **Grammar checker & red squiggles** | Review spelling/basic grammar, choose replacements, ignore terms; request an AI grammar pass | Local dictionary/rules plus optional OpenRouter correction |
+| **AI humanizer** | Basic/Advanced natural-voice editing, or **Rules (local)** | OpenRouter for Basic/Advanced; deterministic rules for local mode |
+| **TurnitOFF** | Apply inspectable rules, protect terms/math/code/citations, constrain word growth, inspect every edit | Browser-local, zero generative AI; 27 bundled rules |
+| **Document processing** | Edit eligible prose/runs/comments in documents and mixed ZIPs while auditing preservation | Local parsers, XML checks and archive limits |
+| **ZipPy lab** | Compare actual gzip size, byte entropy, sentence variation and 3/4/5-gram overlap | Descriptive local measurements |
+| **Summarizer** | Short, Medium, Long, Detailed summaries with length checks | OpenRouter; labeled extractive fallback |
+| **Plagiarism checker** | Fingerprint matching, ranked sources, exact highlights, exclusions and opt-in repository comparisons | Local device matching or private Python service |
+| **Semantic review** | Find meaning-similar passages using embeddings, with source IDs/offsets | Optional Python model service; separate from exact coverage |
+| **AI detector** | Independent experimental transformer indicator, projected sentence highlights and abstention | Optional Python classifier; English baseline, minimum prose length |
+| **Citation generator** | Webpage/book/journal APA templates, alphabetical reference library and in-text forms | Manually supplied source metadata |
+| **TurnitOFF citation engine** | Explicit source markers, hierarchical subject labels, APA/IEEE/BibTeX/LaTeX/JSON exports | Deterministic; no invented source discovery |
+| **APA 7 formatter** | Student/professional metadata, content preview and formatted DOCX | Server-side document generation |
+| **Workspace controls** | Copy/download, use result as draft, recent activity, optional saving, clear workspace, responsive navigation | Browser/device storage; no cross-device sync |
 
-| Tool               | What works                                                                                                               | Limits                                                               |
-| ------------------ | ------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------- |
-| Paraphraser        | Standard, Fluency, Humanize, Formal, Academic, Simple, Creative; rewrite intensity                                       | Requires OpenRouter; review facts and meaning                        |
-| Grammar checker    | AI grammar correction; basic local spelling/punctuation fallback without a key                                           | Local fallback is deliberately limited                               |
-| AI humanizer       | Basic and Advanced natural-voice editing                                                                                 | Does not guarantee detector evasion                                  |
-| Summarizer         | Short, Medium, Long, Detailed; AI summaries or local extractive fallback                                                 | Summaries require review against the source                          |
-| AI detector | Independent optional English transformer/window indicator, descriptive features and explicit abstention | Requires local/remote Python model service; uncalibrated research baseline, not proof of authorship |
-| Plagiarism checker | Winnowing, exact alignments, ranked sources, exclusions and opt-in repository matching | Searches supplied/device/tenant sources only; no licensed web or academic corpus |
-| Citation generator | APA 7 templates for webpages, books, and journal articles; one/two/three-plus author in-text forms; alphabetical library | Manual source details; verify source-specific APA rules              |
-| APA 7 lab          | Student/professional title pages, body, reference list, DOCX export                                                      | Experimental formatter, not an automatic rubric grade                |
-| Document import    | DOCX, text-based PDF, TXT; browser-side extraction and drag/drop                                                         | 10 MB / 100 PDF pages / 25,000 extracted characters; no OCR          |
-| Workspace          | Copy/download results, use result as draft, 20 recent results, local draft saving, clear data                            | Browser/device storage; no cross-device sync                         |
+## Product showcases with real examples
 
-## Independent detection upgrade
+The screenshots below are fresh captures of the running product using synthetic classroom/test examples. Generated responses are actual observed outputs, not mockups; another model run can differ. Examples demonstrate functionality, not factual correctness or detector accuracy. [Screenshot gallery and provenance](docs/showcase/README.md).
 
-The existing **AI detector** and **Plagiarism checker** names are retained. Similarity, embeddings and neural classification run independently, with scope/model metadata and no fabricated fallback percentage. The Python service is local by user preference; hosted neural/semantic results remain unavailable until a reachable private backend is configured. The web app still supports on-device fingerprint matching.
+### 1. Turn an assignment into a research conversation
 
-- [Architecture, component design, phase map and production roadmap](docs/detection/ARCHITECTURE.md)
-- [Service setup, Docker Compose and deployment guide](services/detection/README.md)
-- [Evaluation and training-data strategy](docs/detection/EVALUATION.md)
-- [Verification results and remaining limits](docs/detection/VERIFICATION.md)
+**Use case:** a student needs to plan a 2,500-word case study about a leader across cultures using Yin's method and APA 7.
 
-Detection imports support PDF, DOCX, PPTX, HTML, RTF, TXT, MD and TEX through the service (local-only imports omit PPTX/RTF). Reports export JSON, HTML and service-rendered PDF. SkullBot Chat, local red proofreading squiggles and the 27-rule TurnitOFF workspace remain available.
+Try:
 
-## Product flow
+> Outline a 2,500-word case study of a leader across cultures using Yin’s method. Give six leadership themes and evidence placeholders. Do not invent sources or interviews.
 
-1. Choose a writing tool from a card or the sidebar.
-2. Paste text, try the example, or import a document.
-3. Pick a mode and, for paraphrasing, the rewrite intensity.
-4. Submit. Read the result and its method label, review the meaning, then copy/download or use it as your next draft.
-5. Add sources in Citation generator. Authors use `Last, Initials.` separated by semicolons; group authors are accepted. Leave year blank for `n.d.`.
-6. Open APA 7 formatter, fill in the title-page details, and include your own verified in-text citations in the body. Preview the content and export a DOCX containing your citation library.
-7. Reopen recent activity on the same device, or disable saving in workspace settings.
+The observed answer organized a case-study design and named six themes: communication adaptation, power distance, relationship/task-oriented trust, conflict management, motivation/recognition, and change management. Evidence remained explicitly marked as placeholders. Follow up with:
+
+> Turn the outline into a five-step research checklist. Identify which sources and evidence I still need to supply.
+
+Chat supports Markdown answers, follow-ups, copy, regenerate, stop/retry, and optional device storage. It does not browse the web or verify references. Prompted length goals are not hard guarantees.
+
+### 2. Rephrase an academic draft
+
+Choose **Paraphraser → Academic** and adjust rewrite intensity.
+
+**Input used in the live showcase:**
+
+> Our team studied how leaders work across cultures. We compared interview notes with public documents and considered alternative explanations before drawing conclusions.
+
+**Observed output:**
+
+> We examined how leaders operate across cultures by comparing interview notes with public documents and considering alternative explanations before drawing conclusions.
+
+![Academic paraphrasing with original text and observed rewrite](docs/showcase/02-paraphraser.jpg)
+
+The other modes offer different registers. Intensity zero is preserved as zero; it requests minimal editing rather than disabling the model. Review meaning, nuance, quotations and attribution after every rewrite.
+
+### 3. Catch errors with red squiggles
+
+Paste:
+
+```text
+i recieve teh report and keep seperate notes. The researcher have evidence.
+```
+
+Red wavy underlines identify spelling/basic grammar issues in the editor. Open a suggestion to replace a span or ignore a term. One live AI pass returned the following (it also changed the tense, so review the intended time frame):
+
+```text
+I received the report and kept separate notes. The researcher has evidence.
+```
+
+![Grammar corrections and red proofreading underlines](docs/showcase/03-grammar.jpg)
+
+The local pass is deliberately narrower than a complete grammar model. For example, the deterministic grammar function corrects `i recieve teh report and keep seperate notes.` to `I receive the report and keep separate notes.`; broader agreement correction uses the AI pass or targeted editor suggestions.
+
+### 4. Choose model editing or a deterministic Humanizer pass
+
+**Basic / Advanced** request natural-voice editing through OpenRouter. **Rules (local)** uses the same inspectable engine as TurnitOFF.
+
+Actual deterministic example:
+
+```text
+Before: Furthermore, we utilize evidence in order to evaluate $E=mc^2$ (Smith, 2024).
+After:  Also, we use evidence to evaluate $E=mc^2$ (Smith, 2024).
+```
+
+![Humanizer running the local deterministic mode](docs/showcase/04-humanizer.jpg)
+
+The equation and citation are unchanged. `Smith, 2024` is a synthetic preservation-test marker, not a supplied or verified reference. Humanizer editing does not establish detector evasion.
+
+### 5. Condense a long research draft
+
+Use **Summarizer → Short / Medium / Long / Detailed**. The result labels whether it came from AI assistance or an extractive fallback.
+
+The fresh screenshot uses a 92-word classroom-methodology draft. Its observed Short result was: “This case study examines cross-cultural leadership without stereotypes, using verified evidence and comparing observed patterns against rival explanations.”
+
+A previous live QA run used the same synthetic 2,836-word cross-cultural leadership research-plan draft:
+
+| Mode | Target words | Observed words | Method |
+| --- | ---: | ---: | --- |
+| Short | 567 | 558 | AI-assisted |
+| Medium | 1,134 | 1,128 | Labeled extractive fallback |
+| Long | 1,702 | 1,702 | Labeled extractive fallback |
+| Detailed | 2,269 | 2,269 | Labeled extractive fallback |
+
+![Summarizer showing a condensed classroom example](docs/showcase/05-summarizer.jpg)
+
+These are individual runs, not universal length or quality guarantees. Out-of-budget or truncated model summaries trigger a labeled fallback built from intact original sentences. See the [original QA report](docs/QA-REPORT.md).
+
+### 6. Make protected, reviewable edits with TurnitOFF
+
+TurnitOFF v1.0.0 is an English literal-rule engine with **27 downloadable rules**, not an LLM paraphraser.
+
+The example above produces three logged edits—`in order to → to`, `utilize → use`, `Furthermore, → Also,`—and preserves two protected spans. Its rule-pass count decreases from **11 to 9 words**.
+
+![TurnitOFF protected editing and change audit](docs/showcase/06-turnitoff.jpg)
+
+Controls include technical fidelity, zero expansion, discourse/concision switches, protected terms and custom literal JSON rules. Higher fidelity permits fewer authored rules; it is not a learned probability. Zero expansion means the word count cannot increase, not that it stays exactly equal.
+
+For example, protect `utilize` and transform:
+
+```text
+We utilize evidence in order to learn.
+→ We utilize evidence to learn.
+```
+
+An additional custom rule can use this schema:
+
+```json
+[{"id":"team-01","from":"prior to","to":"before","stage":"lexical","alignment":99}]
+```
+
+Duplicate IDs, empty/multiline phrases, malformed JSON and invalid alignment values are rejected. Math, fenced/inline code, citations, URLs, quotes, numbers and user-protected terms are conservatively masked. Review all edits for meaning. There is no verified detector bypass, semantic-equivalence certification, watermark removal or 4,000-rule catalog.
+
+### 7. Process documents and code without rewriting executable statements
+
+TurnitOFF's **Documents** tab accepts TXT, Markdown, LaTeX, DOCX, ZIP, JS, JSX, TS, TSX, MJS, CJS and Python.
+
+Actual JavaScript example:
+
+```javascript
+// Before: Utilize evidence in order to proceed.
+const label = "utilize";
+
+// After: Use evidence to proceed.
+const label = "utilize";
+```
+
+![Mixed-project ZIP processing with per-file audits](docs/showcase/12-documents.jpg)
+
+JS/TS/Python parsers identify eligible comments and verify the result; strings, executable text, Python docstrings and tool directives remain intact. Beginner / Intermediate / Architect profiles adjust fidelity thresholds; they do not generate new comments.
+
+DOCX processing edits eligible `w:t` run text while checking XML tags/attributes and retaining other package content. Complex/protected paragraphs are skipped conservatively, including protected phrases split across formatting runs. Unsupported binaries and nested ZIPs are preserved, with per-file failures reported. Metadata is preserved.
+
+Limits: **10 MB upload, 500 archive entries, 20 MB per expanded entry, 50 MB total expanded data**. This does not guarantee arbitrary document rendering or semantic fidelity. [Full TurnitOFF audit](docs/TURNITOFF-AUDIT.md).
+
+### 8. Measure text with ZipPy
+
+The **ZipPy lab** compares original and transformed text using actual gzip bytes, UTF-8 byte Shannon entropy, mean sentence length, sentence-length variation, and original/output 3/4/5-gram Jaccard overlap. Measurements can be exported as JSON.
+
+![ZipPy descriptive text measurements](docs/showcase/07-zippy.jpg)
+
+These are descriptive measurements—not language-model perplexity, AI probabilities, a web plagiarism score, or a submission-readiness score. Byte entropy and gzip size depend strongly on text length/content.
+
+### 9. Inspect exact overlap separately from semantic similarity
+
+Paste this same fixture into the submission and a supplied source:
+
+> Culturally responsive leaders listen carefully before making important decisions across national borders.
+
+The hosted fingerprint engine reports **100% exact coverage** for the identical text. Excluding that source and rerunning gives **0%** when no other qualifying source remains. Duplicate/overlapping source matches are unioned rather than double-counted.
+
+The fresh screenshot adds 14 original words after that copied sentence: **12 of 26 eligible words matched (46.15%)**, with the copied span highlighted. The short input correctly receives no AI percentage.
+
+![Similarity report with ranked sources and independent indicators](docs/showcase/08-similarity.jpg)
+
+You can exclude quotations, bibliography, small matches or specific sources. Indexing is off by default. Device sources remain on the device; service sources belong to a credential-scoped tenant repository. Institutional settings control member indexing. Self-overlap and shared tenant text are review leads, not misconduct findings.
+
+A real local embedding smoke test used:
+
+- **Source:** “A cross-cultural leader listens carefully before making important decisions. Respectful communication helps international teams work together effectively.”
+- **Submission:** “Leaders working across cultures listen attentively before they make major decisions. International teams collaborate more effectively when communication is respectful.”
+- **Observed result:** **0% lexical overlap**, one semantic candidate at **cosine 0.8928** using the configured MiniLM model.
+
+Semantic candidates stay separate from exact coverage. This one fixture is not a paraphrase-detection accuracy benchmark. The product does not search Turnitin, the open web, publisher databases or a licensed academic corpus.
+
+### 10. Run an independent, explicitly experimental AI analysis
+
+The local Python service runs actual pretrained classifier weights. The current English baseline is `fakespot-ai/roberta-base-ai-text-detection-v1`; the observed revision is recorded in the [verification report](docs/detection/VERIFICATION.md).
+
+![Local classifier-backed AI indicator, explicitly labeled experimental](docs/showcase/09-ai-detector.jpg)
+
+The indicator is the eligible word share in sentences whose projected window-model score meets the configured threshold. It is **not the probability that a person used AI**. Sentence values project overlapping-window scores; they are not independently calibrated sentence probabilities.
+
+- Fewer than 300 eligible prose words: no AI percentage; minimum-length explanation.
+- No configured model/service: unavailable, not a fabricated fallback score.
+- Unsupported language: the English baseline abstains.
+- Exclude a matching source: exact similarity changes independently of the AI result.
+
+Descriptive features and optional reference-LM perplexity are separate signals. No validated modern-LLM false-positive rate, AI-paraphrase accuracy, multilingual AI accuracy or commercial-tool equivalence is claimed. Human review is essential.
+
+### 11. Build references from source records you supply
+
+Enter a book record such as author `Yin, R. K.`, year `2018`, title `Case study research and applications: Design and methods`, publisher `SAGE`.
+
+The current common-source template produces:
+
+```text
+Yin, R. K. (2018). Case study research and applications: Design and methods. SAGE.
+In-text form: (Yin, 2018)
+```
+
+![Citation entry and alphabetical reference library](docs/showcase/10-citations.jpg)
+
+Verify the publication and add source-specific details such as edition where required. Templates support webpages, books and journal articles, multiple/group authors, alphabetical ordering and common italic formatting; they do not verify that a source supports a claim.
+
+In **TurnitOFF → Sources**, organize records by subject and insert explicit markers:
+
+```text
+Use a bounded case [[cite:yin2018]].
+→ Use a bounded case (Yin, 2018).
+```
+
+Markers can resolve to APA, IEEE or LaTeX forms. Export APA/IEEE text, BibTeX, LaTeX or JSON. Taxonomies organize sources across CS/AI, engineering/physics, math/statistics, quantitative finance and medical/life sciences; they do not discover or invent sources. Missing records are retained/reported. Citation insertion is separate from the zero-expansion rule pass and may add words.
+
+### 12. Dress the manuscript in APA 7
+
+Choose **APA 7 formatter → Student** and supply title, author, institution, course, instructor, due date and body. Professional papers add a running head and author note. Preview the content and export DOCX using the citation library.
+
+![Student-paper metadata and APA content preview](docs/showcase/11-apa.jpg)
+
+Exports implement US Letter, one-inch margins, Times New Roman 12 pt, double spacing, half-inch first-line body indents, page-number fields, separate title/body/reference starts, alphabetical references and hanging indents. Check the resulting document in Word.
+
+The preview is a content preview, not a Word pagination renderer. Abstracts, complex headings/tables/figures/affiliations and assignment-specific formatting require manual editing. It does not generate a verified 2,500-word case study, enforce an academic rubric, add quotation locators or establish research validity.
+
+## One practical student workflow
+
+1. Use Chat to turn the cross-cultural leadership assignment into an outline and evidence checklist.
+2. Collect your own sources/evidence; write the case study and add verified in-text citations.
+3. Review red squiggles and use Grammar/Paraphraser for targeted edits.
+4. Compare the draft against supplied or opted-in repository sources; review matched spans in context.
+5. If you use TurnitOFF, protect technical terms and inspect every deterministic change. Do not treat ZipPy or an AI indicator as clearance for submission.
+6. Add verified bibliography records, prepare APA metadata and export DOCX; finish manual APA review in Word.
+
+## Formats and execution boundaries
+
+| Workspace | Import/processing support | Scope |
+| --- | --- | --- |
+| General writing editor | DOCX, text-based PDF, TXT | 10 MB, 100 PDF pages, 25,000 extracted characters; no OCR |
+| Detection, on device | PDF, DOCX, HTML, TXT, MD, TEX | 10 MB, 200 PDF pages, 200,000 characters; extraction offsets refer to extracted text |
+| Detection service | PDF, DOCX, PPTX, HTML, RTF, TXT, MD, TEX | Bounded extraction; no OCR or complete reconstruction of all layout/embedded content |
+| TurnitOFF | TXT, MD, TEX, DOCX, ZIP, JS/JSX/TS/TSX/MJS/CJS/PY | Eligible prose/runs/comments only; archive and parser audits |
+| Report/document export | Writing TXT; APA DOCX; detection JSON/HTML/PDF; citation formats; metric JSON | Server PDF requires detection service; local mode offers browser Print/Save as PDF |
 
 ## Run locally
 
-Use **Node.js 24** and npm.
+Use **Node.js 24** and npm. Python detection uses **Python 3.11+**.
 
-```sh
+```powershell
 npm ci
-```
-
-Copy `.env.example` to `.dev.vars`, then set `OPENROUTER_API_KEY` locally. Do not commit this file. `OPENROUTER_MODEL` defaults to `openrouter/auto`; set a supported OpenRouter model ID to pin a particular model.
-
-```sh
+if (!(Test-Path .dev.vars)) { Copy-Item .env.example .dev.vars }
 npm run dev
 ```
 
-Open the Local URL printed by the server (normally `http://127.0.0.1:5173`). The Sites portable profile uses a local test identity. The app still supports local grammar, extractive summaries, citations, fingerprint comparison and APA export without a key. Rewriting clearly reports missing configuration instead of fabricating a result.
+Set `OPENROUTER_API_KEY` privately in `.dev.vars` for Chat and AI editing; `OPENROUTER_MODEL` defaults to `openrouter/auto`. Never commit or paste keys into chat. Local proofreading, TurnitOFF, extractive summaries, citations, fingerprint matching and APA export do not require an OpenRouter key.
 
-```sh
-npm run typecheck
-npm test
-npm run build
+Open the Local URL printed by the server (normally `http://127.0.0.1:5173`). Local previews use a test identity. Forks must register their own Site and replace the hosting identity in `.openai/hosting.json`.
+
+For the optional Python service, use the [setup and deployment guide](services/detection/README.md). It covers private local credentials, actual model downloads/revision pinning, Docker Compose, service configuration, training/evaluation scripts and connecting a reachable backend. Existing `DETECTION_SERVICE_*` entries—including blank placeholders—must be configured locally; the setup helper does not overwrite them.
+
+The current service runs locally by user preference. The hosted Worker cannot reach your laptop's `127.0.0.1`; connect an accessible private API before expecting hosted neural/semantic inference.
+
+## Architecture and source map
+
+```mermaid
+flowchart LR
+  UI[React writing workspace] --> LOCAL[Local proofreading and TurnitOFF]
+  UI --> GEN[Worker chat / writing API]
+  GEN --> OR[OpenRouter]
+  UI --> DEV[Device fingerprint matcher]
+  UI --> GATE[Detection gateway]
+  GATE --> API[Private Python service]
+  API --> INDEX[Tenant fingerprint repository]
+  API --> EMB[Optional embeddings]
+  API --> CLASS[Independent optional classifier]
+  UI --> APA[APA DOCX export]
 ```
 
-The included Worker/Sites integration preserves hosted sign-in. For a new Sites deployment, register your own Site and replace the existing project identity rather than pushing to this owner's project. Configure runtime secrets through your host. `npm run start` serves the built Worker locally through Wrangler.
+| Location | Responsibility |
+| --- | --- |
+| `app/page.tsx`, `app/globals.css` | Navigation, editing workspace and responsive theme |
+| `components/chat-workspace.tsx` | Multi-turn Chat UI and device storage |
+| `components/proof-editor.tsx`, `lib/proofreading.ts` | Red squiggles, dictionary/rules, suggestion ranges |
+| `components/turnitoff-workspace.tsx`, `lib/turnitoff/` | Rule catalogs, protection, processors, citations, metrics |
+| `components/detection-workspace.tsx`, `lib/detection/` | Reports, exclusions, device matching and imports |
+| `app/api/chat/`, `app/api/write/`, `app/api/export/` | Generation/editing and APA document endpoints |
+| `app/api/detection/`, `scripts/vite/detection-local-plugin.ts` | Hosted gateway and development-only loopback bridge |
+| `services/detection/` | FastAPI, extraction, indexed matching, real optional models, jobs, auth and tests |
+| `components/citation-panel.tsx`, `components/apa-panel.tsx`, `lib/apa.ts` | Citation library and APA document generation |
 
-## Architecture
+[Full architecture, component design and production roadmap](docs/detection/ARCHITECTURE.md) · [Evaluation/data strategy](docs/detection/EVALUATION.md)
 
-```text
-React workspace
-  ├─ Browser parsing: Mammoth (DOCX), PDF.js (PDF), File API (TXT)
-  ├─ Local storage: draft, citation library, bounded activity
-  ├─ POST /api/write
-  │    ├─ validated tool/mode/text
-  │    ├─ device fingerprinting / independent Python detection service
-  │    └─ OpenRouter → selected pretrained model → edited text
-  │         └─ local grammar / extractive summary when no key is set
-  └─ POST /api/export
-       └─ validated paper data → OOXML DOCX attachment
-```
+## Privacy, operations and verification
 
-| Location                        | Responsibility                                                   |
-| ------------------------------- | ---------------------------------------------------------------- |
-| `app/page.tsx`                  | Workspace, tool selection, submission, upload, activity/settings |
-| `components/citation-panel.tsx` | Citation entry, reference formatting, library                    |
-| `components/apa-panel.tsx`      | Paper metadata, content preview, export form                     |
-| `app/api/write/route.ts`        | Validation, OpenRouter inference, local algorithms               |
-| `app/api/export/route.ts`       | Paper validation and DOCX response                               |
-| `lib/writing.ts`                | Tool definitions, local algorithms, citation helpers             |
-| `lib/apa.ts`                    | Letter layout, headers, title page, paragraphs, references       |
-| `app/globals.css`               | Neutral theme, responsive layout, typography                     |
-| `public/favicon.svg`            | Original minimal SkullBot logo                                   |
+- OpenRouter keys and detection-service credentials stay server-side. Generative editing/Chat send text to OpenRouter and its routed provider.
+- TurnitOFF and on-device matching run locally. Connected detection imports/submissions go to the configured Python service; APA export sends paper data to the SkullBot server.
+- Chats, drafts, citations and optional device sources use unencrypted browser storage. Detection indexing is off by default. Service reports expire lazily; explicitly indexed source text remains until removed. Removing a report does not remove its indexed source.
+- The service has credential-derived tenant/principal roles, bounded queues, rate limits, archive/body bounds and structured request logs. It is a bounded single-instance reference deployment, not institutional SSO or distributed SaaS.
+- Keep the hosted Site private. Public multi-user deployment requires user/session authorization, appropriate per-user tenant credentials, quotas, retention/security review and operational infrastructure.
 
-The interface includes original vector doodles, a skull writing mascot, keyboard-focus styles, accessible button names, responsive navigation, reduced-motion support, and Radix modal focus handling. Heavy document parsers load only on demand. The PDF worker is bundled locally.
+Current verification: **54 JavaScript/TypeScript + 19 Python tests**, TypeScript, production build and both GitHub CI jobs pass. Eight detection import formats were exercised through the UI. Real lexical, embedding and classifier inference completed; a generated PDF was visually reviewed. Docker Compose configuration passed; container execution is unverified because the local Docker daemon is stopped. Browser download-event capture was inconclusive; HTTP report outputs were verified independently.
 
-## APA 7 export
+[Latest verification](docs/detection/VERIFICATION.md) · [TurnitOFF audit](docs/TURNITOFF-AUDIT.md) · [Earlier writing/APA QA](docs/QA-REPORT.md)
 
-Exports use US Letter pages, one-inch margins, Times New Roman 12 pt, double spacing, zero extra paragraph spacing, half-inch body first-line indents, and right-aligned header page fields. Student title pages include title, author, institution, course, instructor, and due date. Professional papers add a running head (maximum 50 characters) and author note. The body and References begin on separate pages; references are sorted with half-inch hanging indents and template-based italics.
+## What remains before commercial/institutional equivalence
 
-This tool does not invent sources, automatically link claims to citations, validate quotation page/paragraph locators, infer heading levels, or grade the supplied rubric. It supports common reference templates, not every APA source category. Abstracts, tables, figures, appendices, and complex author affiliations require manual editing. Webpage dates currently use years. Review the exported document in Word and check your assignment instructions.
+Licensed source coverage, representative model training/calibration, independently measured error rates, multilingual validation, institutional identity/appeal workflows, durable distributed workers/indexes, strict retention scheduling and deployment/load testing remain necessary. Downloading a classifier or observing a successful demo does not establish Turnitin/QuillBot equivalence. No detector-bypass or watermark-removal guarantee is made.
 
-## Privacy and operations
+## License and references
 
-- `OPENROUTER_API_KEY` stays server-side; the status endpoint returns only a configured boolean.
-- AI submission sends your text to OpenRouter and the routed provider. APA export sends paper data to the SkullBot server. File extraction runs in the browser.
-- No application database, document archive, analytics, or automatic training collection is enabled. Drafts and citations use this browser's local storage; that storage is not encrypted.
-- The private hosted Site relies on the platform's access boundary. **Before deploying a fork publicly with a paid API key, add server authorization, abuse protection, and quotas.** The repository does not implement a public SaaS billing/account system.
-- Requests validate the allowed tool/mode and cap text at 25,000 characters. Provider calls time out. UI handles missing credentials, provider errors, empty input, unsupported files, oversized documents, and stale results after draft changes.
-- OpenRouter key expiry/credit caps are account settings; they do not remove provider rate limits or credit requirements.
+SkullBot source is [MIT licensed](LICENSE). Dependencies and model weights keep their own licenses. In particular, [PyMuPDF/MuPDF uses AGPL or a commercial license](https://pymupdf.readthedocs.io/en/latest/about.html); choose a compliant deployment strategy before proprietary distribution. No commercial dependency license was purchased in this project.
 
-## Verification
-
-Initial verification performed November 5, 2026:
-
-- TypeScript check and production Worker build passed.
-- Six focused Node tests passed for normalized overlap, short snippets, grammar/attribution, extractive summaries, non-probabilistic detector labeling, and multiple/group author citation handling.
-- Live OpenRouter requests passed for paraphrasing, grammar correction, summarization, and natural-voice editing.
-- Source comparison and sentence-marker API results passed; rewrite results rendered in the browser with no console errors observed.
-- Citation add/list and APA content preview were exercised in the browser.
-- The export endpoint returned a valid DOCX. OOXML checks verified margins, font, double spacing, page fields, page breaks, and hanging indents. DOCX extraction round trip passed.
-- Phone layout was visually reviewed at 390 × 844, without horizontal overflow; mobile navigation and tool switching worked.
-- **Verification limits:** browser automation did not observe native upload/download events. The PDF parser UI path and final Word-rendered pagination are not visually verified. No classifier accuracy or web plagiarism coverage is claimed.
-
-## Further development
-
-To reach a commercial plagiarism/AI-detection product, integrate a licensed search corpus and a validated classifier with calibration, language coverage evaluation, sentence-level benchmarks, uncertainty reporting, and an appeal/review process. Public multi-user operation also needs persistent per-user storage, authorization, rate limits, and billing. These are separate from this working private writing studio.
-
-## References
-
-- [OpenRouter chat completions documentation](https://openrouter.ai/docs/api/api-reference/chat/send-chat-completion-request)
+- [OpenRouter chat completions](https://openrouter.ai/docs/api/api-reference/chat/send-chat-completion-request)
+- [Fakespot English classifier and score interpretation](https://huggingface.co/fakespot-ai/roberta-base-ai-text-detection-v1)
+- [Sentence Transformers similarity](https://www.sbert.net/docs/sentence_transformer/usage/semantic_textual_similarity.html)
 - [APA Style paper formatting](https://apastyle.apa.org/style-grammar-guidelines/paper-format)
-- [APA Style title-page guidance](https://apastyle.apa.org/style-grammar-guidelines/paper-format/title-page)
 
-MIT licensed. SkullBot is an independent application and is not affiliated with QuillBot or the American Psychological Association. Third-party dependencies retain their licenses.
-
-## Follow-up product QA
-
-See [the product verification report](docs/QA-REPORT.md) for full workflow coverage, defects repaired, 16 regression tests, API/export checks, long-draft summary measurements, and remaining limits. AI summaries now enforce word-count bounds and use an explicitly labeled extractive fallback when needed.
+SkullBot is independent and is not affiliated with QuillBot, Turnitin or the American Psychological Association.
