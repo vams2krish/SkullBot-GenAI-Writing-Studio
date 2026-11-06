@@ -1,5 +1,5 @@
 FROM python:3.11-slim
-ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 HF_HOME=/models
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 HF_HOME=/models PYTHONPATH=/app
 WORKDIR /app
 RUN useradd --create-home --uid 10001 app && mkdir /data /models && chown app:app /data /models
 COPY requirements.txt requirements-ml.txt ./

@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     semantic_threshold: float = Field(default=.83, ge=0, le=1)
     ai_model: str = ""
     ai_revision: str = "main"
-    ai_positive_label: str = "Fake"
+    ai_positive_label: str = "AI"
     ai_min_words: int = Field(default=300, ge=100, le=3000)
     ai_threshold: float = Field(default=.8, ge=0, le=1)
     reference_lm: str = ""

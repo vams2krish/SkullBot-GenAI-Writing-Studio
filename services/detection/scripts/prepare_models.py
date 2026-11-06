@@ -4,6 +4,7 @@ The detector is an English research baseline, NOT a calibrated institutional det
 """
 from pathlib import Path
 import os
+import re
 from dotenv import dotenv_values
 from huggingface_hub import HfApi, snapshot_download
 from skullbot_detection.models import embedding_model, classifier
@@ -22,7 +23,15 @@ for name, revision in [(embedding, embedding_rev), (detector, detector_rev)]:
 embedding_model(embedding, embedding_rev)
 classifier(detector, detector_rev)
 text = path.read_text(encoding="utf-8") if path.exists() else ""
-if path.exists() and "DETECTION_AI_MODEL=" not in text:
-    text += f"\nDETECTION_EMBEDDING_MODEL={embedding}\nDETECTION_EMBEDDING_REVISION={embedding_rev}\nDETECTION_AI_MODEL={detector}\nDETECTION_AI_REVISION={detector_rev}\nDETECTION_AI_POSITIVE_LABEL=AI\n"
+if path.exists():
+    selected = {"DETECTION_EMBEDDING_MODEL": embedding, "DETECTION_EMBEDDING_REVISION": embedding_rev,
+                "DETECTION_AI_MODEL": detector, "DETECTION_AI_REVISION": detector_rev,
+                "DETECTION_AI_POSITIVE_LABEL": values.get("DETECTION_AI_POSITIVE_LABEL") or "AI"}
+    for key, value in selected.items():
+        pattern = rf"(?m)^{key}=.*$"
+        if re.search(pattern, text):
+            text = re.sub(pattern, lambda match: key + "=" + value, text)
+        else:
+            text += "\n" + key + "=" + value
     path.write_text(text, encoding="utf-8")
 print(f"Prepared {embedding}@{embedding_rev} and {detector}@{detector_rev}. English baseline is uncalibrated; pin these revisions in deployment settings.")
