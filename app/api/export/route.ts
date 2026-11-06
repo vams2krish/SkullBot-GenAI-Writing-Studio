@@ -1,5 +1,6 @@
 import { makePaper, type PaperMeta } from "@/lib/apa";
 import type { Citation } from "@/lib/writing";
+import { paperSchema } from "@/lib/paper-validation";
 export async function POST(request: Request) {
   try {
     if (Number(request.headers.get("content-length") || 0) > 150000)
@@ -8,36 +9,13 @@ export async function POST(request: Request) {
     const payload = form.get("paper");
     if (typeof payload !== "string" || payload.length > 100000)
       return new Response("Invalid paper.", { status: 400 });
-    const { text, meta, citations } = JSON.parse(payload) as {
-      text: string;
-      meta: PaperMeta;
-      citations: Citation[];
-    };
-    if (
-      typeof text !== "string" ||
-      !text.trim() ||
-      text.length > 25000 ||
-      !meta ||
-      !["Student", "Professional"].includes(meta.kind) ||
-      typeof meta.title !== "string" ||
-      !meta.title.trim() ||
-      !Array.isArray(citations) ||
-      citations.length > 100
-    )
-      return new Response("Invalid paper details.", { status: 400 });
-    if (
-      Object.values(meta).some(
-        (v) => typeof v !== "string" || v.length > 500,
-      ) ||
-      citations.some(
-        (c) =>
-          !c ||
-          Object.values(c).some(
-            (v) => typeof v !== "string" || v.length > 5000,
-          ),
-      )
-    )
-      return new Response("Invalid fields.", { status: 400 });
+    const parsed = paperSchema.safeParse(JSON.parse(payload));
+    if (!parsed.success)
+      return new Response(
+        "Invalid paper details. Complete all required fields and check your references.",
+        { status: 400 },
+      );
+    const { text, meta, citations } = parsed.data;
     const blob = await makePaper(text, meta, citations);
     return new Response(blob, {
       headers: {

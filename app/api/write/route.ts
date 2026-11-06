@@ -5,6 +5,10 @@ import {
   detect,
   compare,
   tools,
+  words,
+  normalizeIntensity,
+  summaryTarget,
+  resolveWritingResult,
   type ToolId,
 } from "@/lib/writing";
 export async function GET() {
@@ -62,11 +66,11 @@ export async function POST(request: Request) {
       );
     }
     const instructions: Partial<Record<ToolId, string>> = {
-      paraphraser: `Rewrite in ${mode} mode. Restructuring intensity ${Math.max(0, Math.min(100, Number(intensity) || 50))}/100. Preserve facts, nuance, citations and meaning.`,
+      paraphraser: `Rewrite in ${mode} mode. Restructuring intensity ${normalizeIntensity(intensity)}/100. At zero make only essential corrections; at 100 restructure substantially while preserving meaning. Preserve facts, nuance and citations.`,
       grammar:
         "Correct grammar, spelling and punctuation, preserving meaning and citations.",
       humanizer: `Edit for natural, clear, personal writing in ${mode} mode. Preserve meaning and attribution. Do not promise to bypass detectors.`,
-      summarizer: `Summarize at ${mode} length (Short: ~20%, Medium: ~40%, Long: ~60%, Detailed: ~80% of original length). Preserve key facts and citations. Do not invent.`,
+      summarizer: `Summarize in ${mode} mode into approximately ${summaryTarget(text, mode)} words (within 15 percent of this target). The input has ${words(text)} words. Condense the input; do not return the full manuscript. Preserve its uncertainty, key facts and citations. Do not invent.`,
     };
     if (!instructions[tool as ToolId])
       return Response.json(
@@ -112,21 +116,19 @@ export async function POST(request: Request) {
         { status: 502 },
       );
     const data = (await response.json()) as {
-      choices?: { message?: { content?: string } }[];
+      choices?: { finish_reason?: string; message?: { content?: string } }[];
     };
     const output = data.choices?.[0]?.message?.content;
-    if (!output)
-      return Response.json(
-        { error: "The provider returned no text. Please try again." },
-        { status: 502 },
-      );
-    return Response.json({
-      text: output,
-      label: "AI-assisted · OpenRouter",
-      notes: [
-        "Review for accuracy, meaning, and proper attribution before using.",
-      ],
-    });
+    const result = resolveWritingResult(
+      text,
+      tool,
+      mode,
+      output,
+      data.choices?.[0]?.finish_reason,
+    );
+    return result.ok
+      ? Response.json(result.result)
+      : Response.json({ error: result.error }, { status: 502 });
   } catch (error) {
     return Response.json(
       {

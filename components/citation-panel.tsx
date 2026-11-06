@@ -33,14 +33,14 @@ export function Reference({ citation: c }: { citation: Citation }) {
       {c.kind === "Journal article" ? (
         <>
           <em>
-            {c.publisher}
+            {p.publisher}
             {c.volume ? ", " + c.volume : ""}
           </em>
           {c.issue ? "(" + c.issue + ")" : ""}
           {c.pages ? ", " + c.pages : ""}.{" "}
         </>
-      ) : c.publisher ? (
-        c.publisher + ". "
+      ) : p.publisher ? (
+        p.publisher + ". "
       ) : (
         ""
       )}

@@ -47,7 +47,7 @@ export async function makePaper(
           : []),
         new TextRun({
           text:
-            c.publisher +
+            p.publisher +
             (c.kind === "Journal article" && c.volume ? ", " + c.volume : ""),
           italics: c.kind === "Journal article",
         }),
@@ -56,7 +56,7 @@ export async function makePaper(
             ? (c.issue ? "(" + c.issue + ")" : "") +
               (c.pages ? ", " + c.pages : "")
             : "") +
-            (c.publisher ? ". " : "") +
+            (p.publisher ? ". " : "") +
             c.url,
         ),
       ],
@@ -92,7 +92,10 @@ export async function makePaper(
           default: new Header({
             children: [
               new Paragraph({
-                alignment: AlignmentType.RIGHT,
+                alignment:
+                  meta.kind === "Professional"
+                    ? AlignmentType.LEFT
+                    : AlignmentType.RIGHT,
                 tabStops: [{ type: "right", position: 9360 }],
                 children: [
                   ...(meta.kind === "Professional"

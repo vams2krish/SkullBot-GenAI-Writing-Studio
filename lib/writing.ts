@@ -91,10 +91,10 @@ export type Result = {
 export const words = (s: string) =>
   s.trim() ? s.trim().split(/\s+/).length : 0;
 const sentences = (s: string) =>
-  s
-    .match(/[^.!?]+[.!?]+(?:[”"']|$)?|[^.!?]+$/g)
-    ?.map((x) => x.trim())
-    .filter(Boolean) || [];
+  Array.from(
+    new Intl.Segmenter("en", { granularity: "sentence" }).segment(s),
+    (item) => item.segment.trim(),
+  ).filter(Boolean);
 export function grammar(text: string): Result {
   let output = text;
   const notes: string[] = [];
@@ -131,6 +131,39 @@ export function grammar(text: string): Result {
         ],
   };
 }
+export function normalizeIntensity(value: unknown): number {
+  return typeof value === "number" && Number.isFinite(value)
+    ? Math.max(0, Math.min(100, value))
+    : 50;
+}
+export function summaryTarget(text: string, mode: string): number {
+  const ratios: Record<string, number> = {
+    Short: 0.2,
+    Medium: 0.4,
+    Long: 0.6,
+    Detailed: 0.8,
+  };
+  const ratio = ratios[mode] ?? 0.4;
+  return Math.max(1, Math.round(words(text) * ratio));
+}
+export function fileImportError(error: unknown): string {
+  const message = error instanceof Error ? error.message : "";
+  if (
+    /dynamically imported module|importing a module script|loading chunk/i.test(
+      message,
+    )
+  )
+    return "A newer version of SkullBot is available. Refresh this page and try importing again. Your saved draft will stay on this device.";
+  if (/password/i.test(message))
+    return "This document is password-protected. Import an unlocked copy.";
+  if (
+    /^(Please use a PDF|Use a DOCX|No text found|The document exceeds)/.test(
+      message,
+    )
+  )
+    return message;
+  return "This file could not be read. It may be damaged or unsupported. Try saving a fresh DOCX, text-based PDF, or TXT copy.";
+}
 export function summarize(text: string, mode: string): Result {
   const all = sentences(text);
   const stop = new Set(
@@ -150,24 +183,24 @@ export function summarize(text: string, mode: string): Result {
         0,
       ) / Math.sqrt(words(s) || 1),
   }));
-  const ratio =
-    mode === "Short"
-      ? 0.2
-      : mode === "Medium"
-        ? 0.4
-        : mode === "Long"
-          ? 0.6
-          : 0.8;
-  const selected = ranked
-    .sort((a, b) => b.score - a.score)
-    .slice(0, Math.max(1, Math.ceil(all.length * ratio)))
-    .sort((a, b) => a.i - b.i);
+  const target = summaryTarget(text, mode);
+  const selected: typeof ranked = [];
+  let used = 0;
+  for (const sentence of ranked.sort((a, b) => b.score - a.score)) {
+    const count = words(sentence.s);
+    if (used + count <= target) {
+      selected.push(sentence);
+      used += count;
+    }
+  }
+  if (!selected.length && ranked.length) selected.push(ranked[0]);
+  selected.sort((a, b) => a.i - b.i);
   return {
     text: selected.map((x) => x.s).join(mode === "Detailed" ? "\n\n" : " "),
     label: "Local extractive summary",
     notes: [
       "Selects salient original sentences; does not generate new facts.",
-      `${selected.length} of ${all.length} sentences retained.`,
+      `${selected.length} of ${all.length} sentences retained; target approximately ${target} words. Whole sentences are preserved.`,
     ],
   };
 }
@@ -196,6 +229,54 @@ export function detect(text: string): Result {
       "No trained AI detector is connected. Human and AI writing share these patterns.",
       "Never use this analysis as evidence of misconduct or to make consequential decisions.",
     ],
+  };
+}
+export function resolveWritingResult(
+  text: string,
+  tool: ToolId,
+  mode: string,
+  output: unknown,
+  finishReason?: string,
+): { ok: true; result: Result } | { ok: false; error: string } {
+  if (typeof output !== "string" || !output.trim())
+    return {
+      ok: false,
+      error: "The provider returned no text. Please try again.",
+    };
+  const target = summaryTarget(text, mode);
+  if (
+    tool === "summarizer" &&
+    (words(output) > target * 1.15 ||
+      words(output) < target * 0.8 ||
+      finishReason === "length")
+  ) {
+    const fallback = summarize(text, mode);
+    return {
+      ok: true,
+      result: {
+        ...fallback,
+        notes: [
+          "The AI response did not meet this mode’s length target. An extractive summary of your original text is shown instead.",
+          ...fallback.notes,
+        ],
+      },
+    };
+  }
+  if (finishReason === "length")
+    return {
+      ok: false,
+      error:
+        "The provider reached its output limit. Please process a shorter excerpt so the result is complete.",
+    };
+  return {
+    ok: true,
+    result: {
+      text: output,
+      label: "AI-assisted · OpenRouter",
+      notes: [
+        "Review for accuracy, meaning, and proper attribution before using.",
+      ],
+    },
   };
 }
 export function compare(text: string, source: string): Result {
@@ -256,11 +337,18 @@ export function citationParts(c: Citation) {
         ? `${last} & ${authors[1].split(",")[0]}`
         : last;
   const authorLead = author.endsWith(".") ? author : author + ".";
+  const publisher =
+    c.kind === "Webpage" &&
+    authors.length === 1 &&
+    authors[0].toLowerCase().trim() === c.publisher.toLowerCase().trim()
+      ? ""
+      : c.publisher;
   return {
     author,
     authorLead,
     year,
+    publisher,
     inText: `(${inText}, ${year})`,
-    reference: `${authorLead} (${year}). ${authors.length ? c.title + ". " : ""}${c.publisher ? c.publisher + ". " : ""}${c.kind === "Journal article" && c.volume ? `${c.volume}${c.issue ? "(" + c.issue + ")" : ""}${c.pages ? ", " + c.pages : ""}. ` : ""}${c.url}`,
+    reference: `${authorLead} (${year}). ${authors.length ? c.title + ". " : ""}${publisher ? publisher + (c.kind === "Journal article" && c.volume ? ", " : ". ") : ""}${c.kind === "Journal article" && c.volume ? `${c.volume}${c.issue ? "(" + c.issue + ")" : ""}${c.pages ? ", " + c.pages : ""}. ` : ""}${c.url}`,
   };
 }

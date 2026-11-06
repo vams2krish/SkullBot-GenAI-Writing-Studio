@@ -14,18 +14,18 @@ The hosted app is private to its owner. This repository is public. Forks need th
 
 ## Features and implementation status
 
-| Tool | What works | Limits |
-|---|---|---|
-| Paraphraser | Standard, Fluency, Humanize, Formal, Academic, Simple, Creative; rewrite intensity | Requires OpenRouter; review facts and meaning |
-| Grammar checker | AI grammar correction; basic local spelling/punctuation fallback without a key | Local fallback is deliberately limited |
-| AI humanizer | Basic and Advanced natural-voice editing | Does not guarantee detector evasion |
-| Summarizer | Short, Medium, Long, Detailed; AI summaries or local extractive fallback | Summaries require review against the source |
-| AI detector | Sentence-level experimental style markers with explanations | **No trained classifier, probability, or authorship determination** |
-| Plagiarism checker | Exact normalized five-word source comparison and covered-word percentage | **Only the source supplied by the user; no internet or corpus scan** |
-| Citation generator | APA 7 templates for webpages, books, and journal articles; one/two/three-plus author in-text forms; alphabetical library | Manual source details; verify source-specific APA rules |
-| APA 7 lab | Student/professional title pages, body, reference list, DOCX export | Experimental formatter, not an automatic rubric grade |
-| Document import | DOCX, text-based PDF, TXT; browser-side extraction and drag/drop | 10 MB / 100 PDF pages / 25,000 extracted characters; no OCR |
-| Workspace | Copy/download results, use result as draft, 20 recent results, local draft saving, clear data | Browser/device storage; no cross-device sync |
+| Tool               | What works                                                                                                               | Limits                                                               |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------- |
+| Paraphraser        | Standard, Fluency, Humanize, Formal, Academic, Simple, Creative; rewrite intensity                                       | Requires OpenRouter; review facts and meaning                        |
+| Grammar checker    | AI grammar correction; basic local spelling/punctuation fallback without a key                                           | Local fallback is deliberately limited                               |
+| AI humanizer       | Basic and Advanced natural-voice editing                                                                                 | Does not guarantee detector evasion                                  |
+| Summarizer         | Short, Medium, Long, Detailed; AI summaries or local extractive fallback                                                 | Summaries require review against the source                          |
+| AI detector        | Sentence-level experimental style markers with explanations                                                              | **No trained classifier, probability, or authorship determination**  |
+| Plagiarism checker | Exact normalized five-word source comparison and covered-word percentage                                                 | **Only the source supplied by the user; no internet or corpus scan** |
+| Citation generator | APA 7 templates for webpages, books, and journal articles; one/two/three-plus author in-text forms; alphabetical library | Manual source details; verify source-specific APA rules              |
+| APA 7 lab          | Student/professional title pages, body, reference list, DOCX export                                                      | Experimental formatter, not an automatic rubric grade                |
+| Document import    | DOCX, text-based PDF, TXT; browser-side extraction and drag/drop                                                         | 10 MB / 100 PDF pages / 25,000 extracted characters; no OCR          |
+| Workspace          | Copy/download results, use result as draft, 20 recent results, local draft saving, clear data                            | Browser/device storage; no cross-device sync                         |
 
 ## Product flow
 
@@ -76,17 +76,17 @@ React workspace
        └─ validated paper data → OOXML DOCX attachment
 ```
 
-| Location | Responsibility |
-|---|---|
-| `app/page.tsx` | Workspace, tool selection, submission, upload, activity/settings |
-| `components/citation-panel.tsx` | Citation entry, reference formatting, library |
-| `components/apa-panel.tsx` | Paper metadata, content preview, export form |
-| `app/api/write/route.ts` | Validation, OpenRouter inference, local algorithms |
-| `app/api/export/route.ts` | Paper validation and DOCX response |
-| `lib/writing.ts` | Tool definitions, local algorithms, citation helpers |
-| `lib/apa.ts` | Letter layout, headers, title page, paragraphs, references |
-| `app/globals.css` | Neutral theme, responsive layout, typography |
-| `public/favicon.svg` | Original minimal SkullBot logo |
+| Location                        | Responsibility                                                   |
+| ------------------------------- | ---------------------------------------------------------------- |
+| `app/page.tsx`                  | Workspace, tool selection, submission, upload, activity/settings |
+| `components/citation-panel.tsx` | Citation entry, reference formatting, library                    |
+| `components/apa-panel.tsx`      | Paper metadata, content preview, export form                     |
+| `app/api/write/route.ts`        | Validation, OpenRouter inference, local algorithms               |
+| `app/api/export/route.ts`       | Paper validation and DOCX response                               |
+| `lib/writing.ts`                | Tool definitions, local algorithms, citation helpers             |
+| `lib/apa.ts`                    | Letter layout, headers, title page, paragraphs, references       |
+| `app/globals.css`               | Neutral theme, responsive layout, typography                     |
+| `public/favicon.svg`            | Original minimal SkullBot logo                                   |
 
 The interface includes original vector doodles, a skull writing mascot, keyboard-focus styles, accessible button names, responsive navigation, reduced-motion support, and Radix modal focus handling. Heavy document parsers load only on demand. The PDF worker is bundled locally.
 
@@ -129,3 +129,7 @@ To reach a commercial plagiarism/AI-detection product, integrate a licensed sear
 - [APA Style title-page guidance](https://apastyle.apa.org/style-grammar-guidelines/paper-format/title-page)
 
 MIT licensed. SkullBot is an independent application and is not affiliated with QuillBot or the American Psychological Association. Third-party dependencies retain their licenses.
+
+## Follow-up product QA
+
+See [the product verification report](docs/QA-REPORT.md) for full workflow coverage, defects repaired, 16 regression tests, API/export checks, long-draft summary measurements, and remaining limits. AI summaries now enforce word-count bounds and use an explicitly labeled extractive fallback when needed.

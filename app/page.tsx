@@ -37,6 +37,7 @@ import {
   tools,
   words,
   citationParts,
+  fileImportError,
   type Citation,
   type Result,
   type ToolId,
@@ -304,7 +305,7 @@ export default function Home() {
       setFileName(file.name);
       setNotice("Your document is ready.");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Unable to read this file.");
+      setError(fileImportError(e));
     } finally {
       setBusy(false);
       if (input.current) input.current.value = "";
@@ -557,7 +558,11 @@ export default function Home() {
                           min="0"
                           max="100"
                           value={intensity}
-                          onChange={(e) => setIntensity(Number(e.target.value))}
+                          onChange={(e) => {
+                            version.current++;
+                            setIntensity(Number(e.target.value));
+                            setResult(null);
+                          }}
                           aria-label="Rewrite intensity"
                         />
                         <span>{intensity}%</span>
