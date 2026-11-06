@@ -32,6 +32,8 @@ export type SimilarityReport = {
   limitations: string[];
 };
 export type MatchOptions = {
+  ai_profile?: "default" | "fakespot" | "desklib";
+  embedding_profile?: "default" | "minilm" | "e5";
   minimum_words: number;
   exclude_quotes: boolean;
   exclude_bibliography: boolean;

@@ -16,10 +16,11 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 from .config import settings
 from .ingestion import extract
 from .lexical import similarity
-from .models import semantic, ai_detection
+from .models import semantic, ai_detection, embedding_model, encode_texts, MODEL_LOCK
 from .preprocess import language
 from .repository import Repository
 from .reporting import html_report, pdf_report
+from .model_registry import select_models, available_models
 
 log = logging.getLogger("skullbot.detection")
 logging.basicConfig(level=logging.INFO, format="%(message)s")
@@ -63,6 +64,17 @@ class BodyLimit:
 
 
 app.add_middleware(BodyLimit)
+
+
+class RankingCandidate(BaseModel):
+    id: str = Field(min_length=1, max_length=300)
+    text: str = Field(min_length=1, max_length=12000)
+
+
+class ReferenceRanking(BaseModel):
+    query: str = Field(min_length=3, max_length=250)
+    embedding_profile: str = Field(default="default", pattern=r"^(default|minilm|e5)$")
+    candidates: list[RankingCandidate] = Field(min_length=1, max_length=12)
 
 
 @dataclass
@@ -129,6 +141,8 @@ class Source(BaseModel):
 
 
 class Options(BaseModel):
+    ai_profile: str = Field(default="default", pattern=r"^(default|fakespot|desklib)$")
+    embedding_profile: str = Field(default="default", pattern=r"^(default|minilm|e5)$")
     minimum_words: int = Field(default=8, ge=5, le=50)
     exclude_quotes: bool = True
     exclude_bibliography: bool = True
@@ -159,7 +173,7 @@ def health():
 
 @app.get("/v1/capabilities")
 def capabilities(user: Identity = Depends(identity)):
-    return {"lexical": "winnowing + indexed repository + alignment", "semantic_model": cfg.embedding_model or None,
+    return {"model_catalog": available_models(), "lexical": "winnowing + indexed repository + alignment", "semantic_model": cfg.embedding_model or None,
             "ai_model": cfg.ai_model or None, "ai_calibrated": False, "ai_languages": ["en"],
             "repository_sources": len(repo.sources(user.tenant, False)), "formats": ["pdf", "docx", "pptx", "html", "rtf", "txt", "md", "tex"],
             "retention_hours": cfg.retention_hours, "max_characters": cfg.max_characters,
@@ -175,6 +189,24 @@ async def extraction(file: UploadFile = File(...), user: Identity = Depends(iden
     except Exception as exc:
         log.warning(json.dumps({"event": "extraction_failed", "type": type(exc).__name__}))
         raise HTTPException(422, "Document could not be extracted. Check format, encoding, password, page and archive limits.") from exc
+
+
+@app.post("/v1/references/rerank")
+def reference_ranking(body: ReferenceRanking, user: Identity = Depends(identity)):
+    selected = select_models(cfg, embedding_profile=body.embedding_profile)
+    if not selected.embedding_model:
+        return {"status": "unavailable", "reason": "No embedding model configured.", "ranking": []}
+    try:
+        with MODEL_LOCK:
+            model = embedding_model(selected.embedding_model, selected.embedding_revision)
+            query = encode_texts(model, [body.query], selected.embedding_model, query=True)
+            passages = encode_texts(model, [c.text for c in body.candidates], selected.embedding_model)
+            scores = (query @ passages.T)[0]
+            ranking = sorted([{"id": c.id, "score": round(float(value), 5)} for c, value in zip(body.candidates, scores)], key=lambda r: -r["score"])
+        return {"status": "completed", "model": selected.embedding_model + "@" + selected.embedding_revision,
+                "ranking": ranking, "meaning": "Metadata relevance only; source existence comes from Crossref, claim support requires review."}
+    except Exception as exc:
+        return {"status": "unavailable", "reason": type(exc).__name__, "ranking": []}
 
 
 @app.get("/v1/sources")
@@ -207,6 +239,7 @@ def execute(id, user, submission):
     try:
         repo.finish(id, "running")
         options = submission.options
+        selected_cfg = select_models(cfg, options.ai_profile, options.embedding_profile)
         supplied = [{"id": f"supplied-{s.id or i}", "title": s.title, "text": s.text, "url": s.url, "author_id": None, "version": 1} for i, s in enumerate(submission.supplied_sources)]
         candidates = repo.candidates(user.tenant, submission.text, cfg.max_candidates)
         lexical = similarity(submission.text, candidates + supplied, size=cfg.shingle_words,
@@ -217,8 +250,8 @@ def execute(id, user, submission):
         for source in lexical["sources"]:
             source["relationship"] = "same_principal_prior_submission" if source.get("author_id") == user.owner else "tenant_repository_or_supplied_source"
         all_sources = [s for s in repo.sources(user.tenant) + supplied if s["id"] not in options.excluded_sources]
-        sem = semantic(submission.text, all_sources, repo, user.tenant, cfg) if options.semantic else {"status": "disabled", "matches": []}
-        ai = ai_detection(submission.text, cfg) if options.ai else {"status": "disabled", "percentage": None, "sentences": []}
+        sem = semantic(submission.text, all_sources, repo, user.tenant, selected_cfg) if options.semantic else {"status": "disabled", "matches": []}
+        ai = ai_detection(submission.text, selected_cfg) if options.ai else {"status": "disabled", "percentage": None, "sentences": []}
         report = {"id": id, "created": datetime.now(timezone.utc).isoformat(),
                   "document": {"title": submission.title, "text": submission.text, "language": language(submission.text), "offset_unit": "unicode_code_points"},
                   "options": options.model_dump(), "similarity": lexical, "semantic": sem, "ai": ai,

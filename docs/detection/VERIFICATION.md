@@ -1,8 +1,8 @@
 # Detection implementation verification — November 6, 2026
 
 ## Automated verification
-- 54 JavaScript/TypeScript tests passed, including the existing writing/TurnitOFF suite and new fingerprint coverage, exclusions, Unicode offsets and winnowing properties.
-- 19 Python tests passed: PDF/DOCX/PPTX/HTML/RTF/text extraction, sentence abbreviations/decimals, original offsets, collision-checked coverage, partial copies, duplicate overlap, source exclusions, source versions, authentication, tenant/report-owner isolation, no-index defaults, explicit opt-in indexing, safe exports, independent poll/write rate limits, queue saturation, institution-controlled member indexing, duplicate IDs and declared/chunked body bounds.
+- 58 JavaScript/TypeScript tests passed, including the existing writing/TurnitOFF suite and new fingerprint coverage, exclusions, Unicode offsets and winnowing properties.
+- 22 Python tests passed: PDF/DOCX/PPTX/HTML/RTF/text extraction, sentence abbreviations/decimals, original offsets, collision-checked coverage, partial copies, duplicate overlap, source exclusions, source versions, authentication, tenant/report-owner isolation, no-index defaults, explicit opt-in indexing, safe exports, independent poll/write rate limits, queue saturation, institution-controlled member indexing, duplicate IDs and declared/chunked body bounds.
 - TypeScript passed; targeted new-code lint passed. Docker Compose configuration validated. Docker image execution was not verified because the Docker daemon is not running on this machine.
 
 ## Live pipeline smoke checks
@@ -33,3 +33,12 @@ A real HTTP path through the development gateway → FastAPI → queue → repos
 
 ## Delivery boundary
 Per the user's instruction, the Python service remains local. The published app can perform on-device fingerprint/source-repository comparisons; neural/semantic capabilities are unavailable there until an accessible service is configured. No licensed web/academic corpus, institutional SSO, distributed broker/vector index, validated modern-LLM false-positive rate, AI-paraphrase accuracy or thousands-of-concurrent-users claim is included. Architecture, training/evaluation paths and production migrations are documented separately.
+
+## APA and additional-model update
+
+- All four alignment buttons were exercised in Chrome. APA standard selects left alignment; custom reset selects justify. Advanced controls update the preview.
+- Automated tests inspect generated DOCX XML for all four alignments and all seven font families, font sizes, line spacing and paragraph gaps. Titles remain centered; reference paragraphs remain left aligned and hanging.
+- The actual `/api/export` endpoint returned a valid 10,705-byte DOCX using Georgia 11 pt, 1.5 spacing, 6/12 pt gaps and justification. ZIP integrity and font/alignment XML were checked. Physical browser saving and Word pagination were not verified.
+- Real pinned Desklib weights loaded and produced logits; E5 generated 384-dimensional normalized embeddings. A queued HTTP submission selecting Desklib + E5 completed through the local gateway, classifier, semantic engine and report. This is an inference smoke test, not an accuracy benchmark.
+- Citation search returned DOI-backed Crossref records. E5 metadata ranking scored a leadership candidate 0.83844 and a marine-chemistry candidate 0.72722 for the cross-cultural leadership query. Similarity is relevance, not claim verification. Browser search, model selection and adding the retrieved Jackson (2016) source were verified.
+- Refreshed screenshots show actual APA controls, source search and model selection/results. New model weights and credentials are excluded from Git.

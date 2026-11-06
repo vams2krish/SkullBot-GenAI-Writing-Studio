@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { paperFormatSchema } from "./paper-format.ts";
 const field = z.string().max(500);
 const citation = z.object({
   id: field,
@@ -50,4 +51,5 @@ export const paperSchema = z.object({
           });
     }),
   citations: z.array(citation).max(100),
+  format: paperFormatSchema.optional(),
 });

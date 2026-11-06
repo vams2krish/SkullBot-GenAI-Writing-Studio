@@ -1,6 +1,7 @@
 /** Development-only Node bridge: workerd cannot fetch the Windows loopback service.
  * Credentials stay in the dev server; production uses the Worker API gateway.
  */
+import { GET as referenceSearch } from "../../lib/reference-provider";
 import { readFileSync } from "node:fs";
 import type { Plugin } from "vite";
 export function detectionLocal(): Plugin {
@@ -8,6 +9,19 @@ export function detectionLocal(): Plugin {
     name: "skullbot-detection-local",
     apply: "serve",
     configureServer(server) {
+      server.middlewares.use("/api/references", async (req, res) => {
+        if (req.method !== "GET") {
+          res.statusCode = 405;
+          res.end();
+          return;
+        }
+        const response = await referenceSearch(
+          new Request("http://localhost/api/references" + (req.url || "")),
+        );
+        res.statusCode = response.status;
+        response.headers.forEach((value, key) => res.setHeader(key, value));
+        res.end(await response.text());
+      });
       let config: Record<string, string> = {};
       try {
         const text = readFileSync(".dev.vars", "utf8");
@@ -27,7 +41,7 @@ export function detectionLocal(): Plugin {
         try {
           const path = (req.url || "").split("?")[0].replace(/^\//, "");
           if (
-            !/^(capabilities|extract|sources(?:\/[a-zA-Z0-9-]+)?|submissions(?:\/[a-zA-Z0-9-]+(?:\/(?:html|pdf))?)?)$/.test(
+            !/^(references\/rerank|capabilities|extract|sources(?:\/[a-zA-Z0-9-]+)?|submissions(?:\/[a-zA-Z0-9-]+(?:\/(?:html|pdf))?)?)$/.test(
               path,
             )
           ) {

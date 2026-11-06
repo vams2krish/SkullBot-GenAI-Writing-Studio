@@ -15,8 +15,8 @@ export async function POST(request: Request) {
         "Invalid paper details. Complete all required fields and check your references.",
         { status: 400 },
       );
-    const { text, meta, citations } = parsed.data;
-    const blob = await makePaper(text, meta, citations);
+    const { text, meta, citations, format } = parsed.data;
+    const blob = await makePaper(text, meta, citations, format);
     return new Response(blob, {
       headers: {
         "Content-Type":

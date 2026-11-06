@@ -195,7 +195,9 @@ Semantic candidates stay separate from exact coverage. This one fixture is not a
 
 ### 10. Run an independent, explicitly experimental AI analysis
 
-The local Python service runs actual pretrained classifier weights. The current English baseline is `fakespot-ai/roberta-base-ai-text-detection-v1`; the observed revision is recorded in the [verification report](docs/detection/VERIFICATION.md).
+The local Python service runs actual pretrained classifier weights. The default English baseline is `fakespot-ai/roberta-base-ai-text-detection-v1`, with selectable Desklib DeBERTa; the observed revision is recorded in the [verification report](docs/detection/VERIFICATION.md).
+
+The refreshed screenshot uses Desklib on a 365-word repeated synthetic fixture: 91.23% thresholded word share. This demonstrates model execution, not accuracy.
 
 ![Local classifier-backed AI indicator, explicitly labeled experimental](docs/showcase/09-ai-detector.jpg)
 
@@ -221,6 +223,8 @@ In-text form: (Yin, 2018)
 
 ![Citation entry and alphabetical reference library](docs/showcase/10-citations.jpg)
 
+**Find academic sources** searches real Crossref metadata. Try `cross cultural leadership`, select **Multilingual E5 small** for local metadata ranking, then **Add source**. Only your query goes to Crossref; no manuscript is sent. Missing models retain Crossref order. Unsupported source types are omitted from the common-source templates. Relevance ranking does not verify claim support.
+
 Verify the publication and add source-specific details such as edition where required. Templates support webpages, books and journal articles, multiple/group authors, alphabetical ordering and common italic formatting; they do not verify that a source supports a claim.
 
 In **TurnitOFF → Sources**, organize records by subject and insert explicit markers:
@@ -236,9 +240,11 @@ Markers can resolve to APA, IEEE or LaTeX forms. Export APA/IEEE text, BibTeX, L
 
 Choose **APA 7 formatter → Student** and supply title, author, institution, course, instructor, due date and body. Professional papers add a running head and author note. Preview the content and export DOCX using the citation library.
 
-![Student-paper metadata and APA content preview](docs/showcase/11-apa.jpg)
+![APA alignment icons, advanced typography and content preview](docs/showcase/11-apa.jpg)
 
-Exports implement US Letter, one-inch margins, Times New Roman 12 pt, double spacing, half-inch first-line body indents, page-number fields, separate title/body/reference starts, alphabetical references and hanging indents. Check the resulting document in Word.
+Use the alignment icons for **left, center, right or justify (default)**. **Advanced typography & spacing** offers seven font families, supported sizes from 8–24 pt, single/1.15/1.5/double/2.5/triple line spacing and 0–24 pt before/after paragraph gaps. Fonts: Times New Roman, Aptos, Calibri, Arial, Georgia, Lucida Sans Unicode and Computer Modern. Font changes select its recommended size. **APA standard** restores left alignment, Times New Roman 12 pt, double spacing and zero paragraph gaps. Justification is a custom option: [APA normally requires left alignment](https://apastyle.apa.org/style-grammar-guidelines/paper-format/paragraph-format). Titles remain centered, references left aligned. Uninstalled fonts may be substituted by Word.
+
+The refreshed screenshot shows Georgia 11 pt, double spacing and justified body text. Exports implement US Letter, one-inch margins, selected typography and alignment, half-inch first-line body indents, page-number fields, separate title/body/reference starts, alphabetical references and hanging indents. Check the resulting document in Word.
 
 The preview is a content preview, not a Word pagination renderer. Abstracts, complex headings/tables/figures/affiliations and assignment-specific formatting require manual editing. It does not generate a verified 2,500-word case study, enforce an academic rubric, add quotation locators or establish research validity.
 
@@ -335,3 +341,14 @@ SkullBot source is [MIT licensed](LICENSE). Dependencies and model weights keep 
 - [APA Style paper formatting](https://apastyle.apa.org/style-grammar-guidelines/paper-format)
 
 SkullBot is independent and is not affiliated with QuillBot, Turnitin or the American Psychological Association.
+
+## Additional model profiles — November 6 update
+
+| Use | Existing profile | Added profile |
+| --- | --- | --- |
+| English experimental AI classification | [Fakespot RoBERTa](https://huggingface.co/fakespot-ai/roberta-base-ai-text-detection-v1) | [Desklib DeBERTa v1.01](https://huggingface.co/desklib/ai-text-detector-v1.01) |
+| Semantic comparison and citation metadata ranking | [MiniLM](https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2) | [Multilingual E5 small](https://huggingface.co/intfloat/multilingual-e5-small) |
+
+The local service offers explicit model selectors with a server whitelist, immutable Hub revisions and local safetensors. E5 uses required query/passage prefixes. Desklib uses a local masked-mean classifier matching its published architecture, without executing remote Python. Missing models return unavailable; scores are not averaged into an invented consensus. Additional weights use the ignored project-drive cache.
+
+These are real ML implementations, **not validated equivalents of Copyleaks, iThenticate, Scribbr, Originality.ai, GPTZero, Grammarly, Plagcheck or Quetext**. Their proprietary models, licensed publisher corpora and validation are not included. Multilingual embeddings do not make English AI classifiers multilingual. Citation retrieval is separate from AI detection and plagiarism coverage. See [setup](services/detection/README.md) and [verification](docs/detection/VERIFICATION.md).

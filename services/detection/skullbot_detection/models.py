@@ -5,6 +5,7 @@ import re
 import statistics
 import threading
 from .preprocess import tokens, segments, exclusion_ranges, language
+from .model_registry import model_cache
 
 MODEL_LOCK = threading.RLock()
 
@@ -22,7 +23,7 @@ def embedding_model(name, revision):
     from .config import settings
     torch.set_num_threads(settings().inference_threads)
     from sentence_transformers import SentenceTransformer
-    return SentenceTransformer(name, revision=revision, trust_remote_code=False, device="cpu", local_files_only=True, model_kwargs={"use_safetensors": True})
+    return SentenceTransformer(name, revision=revision, trust_remote_code=False, device="cpu", local_files_only=True,cache_folder=model_cache(name), model_kwargs={"use_safetensors": True})
 
 
 @lru_cache(maxsize=2)
@@ -31,10 +32,23 @@ def classifier(name, revision):
     from .config import settings
     torch.set_num_threads(settings().inference_threads)
     from transformers import AutoTokenizer, AutoModelForSequenceClassification
-    tokenizer = AutoTokenizer.from_pretrained(name, revision=revision, trust_remote_code=False, local_files_only=True)
-    model = AutoModelForSequenceClassification.from_pretrained(name, revision=revision, trust_remote_code=False, use_safetensors=True, local_files_only=True)
+    tokenizer = AutoTokenizer.from_pretrained(name, revision=revision, trust_remote_code=False, local_files_only=True,cache_dir=model_cache(name))
+    if name == "desklib/ai-text-detector-v1.01":
+        from .desklib_model import DesklibClassifier
+        model = DesklibClassifier.from_pretrained(name, revision=revision, local_files_only=True, use_safetensors=True,cache_dir=model_cache(name))
+        model.config.id2label = {0: "Human", 1: "AI"}
+    else:
+        model = AutoModelForSequenceClassification.from_pretrained(name, revision=revision, trust_remote_code=False, use_safetensors=True, local_files_only=True)
     model.eval()
     return tokenizer, model
+
+
+def encode_texts(model, texts, name, query=False):
+    # E5's model card requires task prefixes, including for non-English inputs.
+    if "multilingual-e5" in name:
+        prefix = "query: " if query else "passage: "
+        texts = [prefix + text for text in texts]
+    return model.encode(texts, normalize_embeddings=True)
 
 
 def semantic(text, sources, repo, tenant, cfg):
@@ -46,7 +60,7 @@ def semantic(text, sources, repo, tenant, cfg):
             query = chunks(text)[:200]
             if not query:
                 return {"status": "insufficient_text", "matches": []}
-            q = model.encode([c["text"] for c in query], normalize_embeddings=True)
+            q = encode_texts(model, [c["text"] for c in query], cfg.embedding_model, query=True)
             matches = []
             key = cfg.embedding_model + "@" + cfg.embedding_revision
             for source in sources:
@@ -55,7 +69,7 @@ def semantic(text, sources, repo, tenant, cfg):
                     continue
                 cached = repo.vectors(tenant, source["id"], key) if not source["id"].startswith("supplied-") else None
                 if cached is None:
-                    cached = model.encode([c["text"] for c in passages], normalize_embeddings=True).tolist()
+                    cached = encode_texts(model, [c["text"] for c in passages], cfg.embedding_model).tolist()
                     if not source["id"].startswith("supplied-"):
                         repo.vectors(tenant, source["id"], key, cached)
                 import numpy as np

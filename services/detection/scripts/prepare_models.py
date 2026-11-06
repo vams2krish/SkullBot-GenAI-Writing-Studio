@@ -8,6 +8,18 @@ import re
 from dotenv import dotenv_values
 from huggingface_hub import HfApi, snapshot_download
 from skullbot_detection.models import embedding_model, classifier
+from skullbot_detection.model_registry import CATALOG, model_cache
+import argparse
+parser = argparse.ArgumentParser()
+parser.add_argument("--additional-profiles", action="store_true", help="Prepare pinned Desklib and multilingual E5 without changing defaults")
+args = parser.parse_args()
+if args.additional_profiles:
+    for group, key in [("ai", "desklib"), ("embedding", "e5")]:
+        model = CATALOG[group][key]
+        snapshot_download(model["name"], revision=model["revision"], cache_dir=model_cache(model["name"]), allow_patterns=["*.json", "*.txt", "*.model", "*.safetensors", "1_Pooling/*"])
+        (classifier if group == "ai" else embedding_model)(model["name"], model["revision"])
+        print("Validated profile:", key, model["revision"])
+    raise SystemExit(0)
 
 service = Path(__file__).resolve().parents[1]
 api = HfApi()
@@ -19,7 +31,7 @@ detector = values.get("DETECTION_AI_MODEL") or "fakespot-ai/roberta-base-ai-text
 embedding_rev = api.model_info(embedding, revision=values.get("DETECTION_EMBEDDING_REVISION") or "main").sha
 detector_rev = api.model_info(detector, revision=values.get("DETECTION_AI_REVISION") or "main").sha
 for name, revision in [(embedding, embedding_rev), (detector, detector_rev)]:
-    snapshot_download(name, revision=revision, allow_patterns=["*.json", "*.txt", "*.safetensors", "1_Pooling/*"])
+    snapshot_download(name, revision=revision, cache_dir=model_cache(name), allow_patterns=["*.json", "*.txt", "*.model", "*.safetensors", "1_Pooling/*"])
 embedding_model(embedding, embedding_rev)
 classifier(detector, detector_rev)
 text = path.read_text(encoding="utf-8") if path.exists() else ""

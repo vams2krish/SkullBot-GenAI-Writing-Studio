@@ -1,6 +1,6 @@
 import { env } from "cloudflare:workers";
 const allowed =
-  /^(capabilities|extract|sources(?:\/[a-zA-Z0-9-]+)?|submissions(?:\/[a-zA-Z0-9-]+(?:\/(?:html|pdf))?)?)$/;
+  /^(references\/rerank|capabilities|extract|sources(?:\/[a-zA-Z0-9-]+)?|submissions(?:\/[a-zA-Z0-9-]+(?:\/(?:html|pdf))?)?)$/;
 async function proxy(
   request: Request,
   context: { params: Promise<{ path: string[] }> },

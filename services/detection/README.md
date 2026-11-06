@@ -60,3 +60,17 @@ Targets to validate before institutional rollout: exact source retrieval recall 
 ## Privacy and index maintenance
 
 Submissions are not indexed by default. An explicit checkbox/API flag stores source text for future tenant matching. Report deletion and source deletion are separate. Completed reports expire lazily after the configured retention period; run a scheduled cleanup for strict deletion deadlines. Source removal deletes fingerprints and cached vectors. The operator crawler CLI only accepts preapproved HTTPS hosts, robots permission and bounded HTML. No open-web or licensed academic corpus is included.
+
+## Additional pinned profiles
+
+After installing requirements-ml.txt, run from this service directory:
+
+```powershell
+$env:PYTHONPATH=$PWD.Path
+$env:HF_XET_CACHE=(Join-Path $PWD 'models/xet')
+.venv/Scripts/python.exe scripts/prepare_models.py --additional-profiles
+```
+
+Downloads and validates pinned Desklib DeBERTa v1.01 and multilingual E5-small without changing existing defaults. Allow about 2.2 GB of weights plus download/cache overhead. New models use `models/hub`; override with `DETECTION_ADDITIONAL_MODEL_CACHE` (Compose: `/models/hub`). Restart the service and select a profile in the UI. The tracked catalog records revisions, licenses and model cards. Desklib remains an uncalibrated English detector; E5 is multilingual retrieval, not multilingual AI detection.
+
+Authenticated POST `/v1/references/rerank` accepts a query, up to 12 metadata candidates and an embedding profile. Cosine rankings are relevance signals, not generated references. The web app retrieves actual Crossref records; it sends only the search query. Missing embeddings retain metadata order.

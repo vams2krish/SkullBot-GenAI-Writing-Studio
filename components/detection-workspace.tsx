@@ -51,6 +51,10 @@ type Report = {
   corpus?: { source_count: number };
 };
 type Capability = {
+  model_catalog?: {
+    ai: { id: string; name: string; label: string; cached: boolean }[];
+    embedding: { id: string; name: string; label: string; cached: boolean }[];
+  };
   configured?: boolean;
   ai_model?: string | null;
   semantic_model?: string | null;
@@ -178,7 +182,9 @@ export function DetectionWorkspace({
     if (busy) {
       setBusy(false);
       setStatus("");
-      setNotice("Input changed. Run a new report; a previously submitted service job may finish independently.");
+      setNotice(
+        "Input changed. Run a new report; a previously submitted service job may finish independently.",
+      );
     }
     setReport(null);
     setError("");
@@ -352,7 +358,8 @@ export function DetectionWorkspace({
         setStatus("");
       }
     } catch (e) {
-      if(version===requestVersion.current)setError(e instanceof Error ? e.message : "Analysis failed.");
+      if (version === requestVersion.current)
+        setError(e instanceof Error ? e.message : "Analysis failed.");
     } finally {
       if (version === requestVersion.current) setBusy(false);
     }
@@ -466,8 +473,10 @@ export function DetectionWorkspace({
           <>
             A trained classifier is required for an AI indicator.{" "}
             {capability.ai_model
-              ? "Configured model: " +
-                capability.ai_model +
+              ? "Selected model: " +
+                (capability.model_catalog?.ai.find(
+                  (m) => m.id === options.ai_profile,
+                )?.name || capability.ai_model) +
                 ". Uncalibrated baseline; review model coverage."
               : "No trained model is connected here. Writing patterns never become a fabricated AI score."}
           </>
@@ -592,6 +601,53 @@ export function DetectionWorkspace({
         </div>
       </div>
       <div className="detection-options">
+        <label>
+          AI detection model
+          <select
+            aria-label="AI detection model"
+            value={options.ai_profile || "default"}
+            disabled={!capability.configured || busy}
+            onChange={(e) => {
+              setOptions({
+                ...options,
+                ai_profile: e.target.value as MatchOptions["ai_profile"],
+              });
+              invalidate();
+            }}
+          >
+            <option value="default">Service default</option>
+            {capability.model_catalog?.ai.map((m) => (
+              <option key={m.id} value={m.id} disabled={!m.cached}>
+                {m.label}
+                {m.cached ? "" : " · download required"}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          Semantic search model
+          <select
+            aria-label="Semantic search model"
+            value={options.embedding_profile || "default"}
+            disabled={!capability.configured || busy}
+            onChange={(e) => {
+              setOptions({
+                ...options,
+                embedding_profile: e.target
+                  .value as MatchOptions["embedding_profile"],
+              });
+              invalidate();
+            }}
+          >
+            <option value="default">Service default</option>
+            {capability.model_catalog?.embedding.map((m) => (
+              <option key={m.id} value={m.id} disabled={!m.cached}>
+                {m.label}
+                {m.cached ? "" : " · download required"}
+              </option>
+            ))}
+          </select>
+        </label>
         <label>
           <input
             type="checkbox"
@@ -723,6 +779,9 @@ export function DetectionWorkspace({
               <p>
                 {report.ai.reason || report.ai.definition || report.ai.status}
               </p>
+              {report.ai.model && (
+                <small className="report-model">{report.ai.model}</small>
+              )}
             </article>
             <article>
               <small>SEMANTIC CANDIDATES</small>

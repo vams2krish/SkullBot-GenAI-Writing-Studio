@@ -1,5 +1,10 @@
-import type { Citation } from "./writing";
-import { citationParts } from "./writing";
+import type { Citation } from "./writing.ts";
+import { citationParts } from "./writing.ts";
+import {
+  paperFormatSchema,
+  defaultPaperFormat,
+  type PaperFormat,
+} from "./paper-format.ts";
 export type PaperMeta = {
   title: string;
   author: string;
@@ -15,7 +20,9 @@ export async function makePaper(
   text: string,
   meta: PaperMeta,
   citations: Citation[],
+  requestedFormat: PaperFormat = defaultPaperFormat,
 ) {
+  const format = paperFormatSchema.parse(requestedFormat);
   const {
     Document,
     Paragraph,
@@ -33,6 +40,7 @@ export async function makePaper(
   const reference = (c: Citation) => {
     const p = citationParts(c);
     return new Paragraph({
+      alignment: AlignmentType.LEFT,
       indent: { left: 720, hanging: 720 },
       children: [
         new TextRun({ text: p.authorLead, italics: !c.authors }),
@@ -68,8 +76,18 @@ export async function makePaper(
     styles: {
       default: {
         document: {
-          run: { font: "Times New Roman", size: 24, color: "000000" },
-          paragraph: { spacing: { line: 480, after: 0, before: 0 } },
+          run: {
+            font: format.font,
+            size: format.fontSize * 2,
+            color: "000000",
+          },
+          paragraph: {
+            spacing: {
+              line: Math.round(format.lineSpacing * 240),
+              after: format.spaceAfter * 20,
+              before: format.spaceBefore * 20,
+            },
+          },
         },
       },
     },
@@ -141,6 +159,12 @@ export async function makePaper(
             .map(
               (p) =>
                 new Paragraph({
+                  alignment: {
+                    left: AlignmentType.LEFT,
+                    center: AlignmentType.CENTER,
+                    right: AlignmentType.RIGHT,
+                    justify: AlignmentType.JUSTIFIED,
+                  }[format.alignment],
                   indent: { firstLine: 720 },
                   children: [new TextRun(p.replace(/\n/g, " "))],
                 }),

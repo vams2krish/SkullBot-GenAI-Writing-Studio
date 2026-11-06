@@ -1,0 +1,38 @@
+{
+  "ai": {
+    "fakespot": {
+      "id": "fakespot",
+      "name": "fakespot-ai/roberta-base-ai-text-detection-v1",
+      "revision": "f9cdb14d1f8b105f597d80fa7b56f20c6ea0e9db",
+      "label": "Fakespot RoBERTa \u00b7 English",
+      "license": "apache-2.0",
+      "card": "https://huggingface.co/fakespot-ai/roberta-base-ai-text-detection-v1"
+    },
+    "desklib": {
+      "id": "desklib",
+      "name": "desklib/ai-text-detector-v1.01",
+      "revision": "5fdea974cd4287c61674951ec78803aa274e2fb7",
+      "label": "Desklib DeBERTa v1.01 \u00b7 English",
+      "license": "mit",
+      "card": "https://huggingface.co/desklib/ai-text-detector-v1.01"
+    }
+  },
+  "embedding": {
+    "minilm": {
+      "id": "minilm",
+      "name": "sentence-transformers/all-MiniLM-L6-v2",
+      "revision": "1110a243fdf4706b3f48f1d95db1a4f5529b4d41",
+      "label": "MiniLM \u00b7 English",
+      "license": "apache-2.0",
+      "card": "https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2"
+    },
+    "e5": {
+      "id": "e5",
+      "name": "intfloat/multilingual-e5-small",
+      "revision": "614241f622f53c4eeff9890bdc4f31cfecc418b3",
+      "label": "Multilingual E5 small",
+      "license": "mit",
+      "card": "https://huggingface.co/intfloat/multilingual-e5-small"
+    }
+  }
+}
