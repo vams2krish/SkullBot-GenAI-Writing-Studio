@@ -45,6 +45,7 @@ import {
 } from "@/lib/writing";
 import { CitationPanel } from "@/components/citation-panel";
 import { ApaPanel } from "@/components/apa-panel";
+import { DetectionWorkspace } from "@/components/detection-workspace";
 import { ChatWorkspace } from "@/components/chat-workspace";
 import { TurnitoffWorkspace } from "@/components/turnitoff-workspace";
 import { ProofEditor } from "@/components/proof-editor";
@@ -435,7 +436,7 @@ export default function Home() {
             </button>
           </div>
         </header>
-        <div className={"page-content "+(active==="chat"?"chat-page":active==="turnitoff"?"workbench-page":"")}>
+        <div className={"page-content "+(active==="chat"?"chat-page":["turnitoff","detector","plagiarism"].includes(active)?"workbench-page":"")}>
           <section className="intro">
             <div>
               <div className="eyebrow">
@@ -515,7 +516,7 @@ export default function Home() {
                   <p>{tool.description}</p>
                 </div>
               </div>
-              {!['chat','turnitoff'].includes(active)&&<button
+              {!['chat','turnitoff','detector','plagiarism'].includes(active)&&<button
                 className="text-button"
                 onClick={() => {
                   edit("");
@@ -527,7 +528,7 @@ export default function Home() {
                 New draft
               </button>}
             </div>
-            {active === "chat" ? <ChatWorkspace copy={copy}/> : active === "turnitoff" ? <TurnitoffWorkspace citations={citations} setCitations={setCitations} copy={copy}/> : active === "citations" ? (
+            {active === "chat" ? <ChatWorkspace copy={copy}/> : (active === "detector" || active === "plagiarism") ? <DetectionWorkspace key={active} kind={active}/> : active === "turnitoff" ? <TurnitoffWorkspace citations={citations} setCitations={setCitations} copy={copy}/> : active === "citations" ? (
               <CitationPanel
                 citations={citations}
                 setCitations={setCitations}
@@ -745,30 +746,11 @@ export default function Home() {
                       </div>
                     </div>
                   </div>
-                  {active === "plagiarism" && (
-                    <label className="source-input">
-                      COMPARISON SOURCE{" "}
-                      <textarea
-                        value={source}
-                        onChange={(e) => {
-                          version.current++;
-                          setSource(e.target.value);
-                          setResult(null);
-                        }}
-                        maxLength={25000}
-                        placeholder="Paste the original source here. Only this source will be compared."
-                      />
-                    </label>
-                  )}
                   <div className="editor-bottom">
                     <div>
                       <ShieldCheck size={15} />
                       <span>
-                        {active === "detector"
-                          ? "Style markers are not proof of AI authorship."
-                          : active === "plagiarism"
-                            ? "Compare supplied sources. Review matches in context."
-                            : "Your voice stays yours. Always review the final text."}
+                        Your voice stays yours. Always review the final text.
                       </span>
                     </div>
                     <Button

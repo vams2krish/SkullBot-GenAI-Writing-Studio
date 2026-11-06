@@ -1,0 +1,28 @@
+services:
+  detection:
+    build:
+      context: .
+      args:
+        INSTALL_ML: ${INSTALL_ML:-false}
+    env_file: .env
+    environment:
+      DETECTION_DATABASE: /data/detection.sqlite3
+      HF_HOME: /models
+    ports:
+      - "127.0.0.1:8089:8089"
+    volumes:
+      - detection-data:/data
+      - model-cache:/models
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp:size=128m,noexec,nosuid
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 4g
+    cpus: 2
+volumes:
+  detection-data:
+  model-cache:

@@ -10,7 +10,7 @@ The hosted app is private to its owner. This repository is public. Forks need th
 
 ## Project classification
 
-**Type: Generative AI application using pretrained deep-learning language models.** SkullBot calls OpenRouter for inference; it does not train or fine-tune its own transformer, DeBERTa, or plagiarism model. It is not an original ML research or model-training project. Local summaries, spelling rules, text overlap, citation templates, and document formatting use deterministic algorithms.
+**Type: writing application with generative editing and independent detection services.** OpenRouter powers generation. Fingerprint similarity is deterministic; the optional Python service runs actual pretrained embedding/classification models and includes a supervised improvement path. No original trained classifier or validated commercial accuracy is bundled. Citation templates and formatting remain deterministic.
 
 ## Features and implementation status
 
@@ -20,12 +20,23 @@ The hosted app is private to its owner. This repository is public. Forks need th
 | Grammar checker    | AI grammar correction; basic local spelling/punctuation fallback without a key                                           | Local fallback is deliberately limited                               |
 | AI humanizer       | Basic and Advanced natural-voice editing                                                                                 | Does not guarantee detector evasion                                  |
 | Summarizer         | Short, Medium, Long, Detailed; AI summaries or local extractive fallback                                                 | Summaries require review against the source                          |
-| AI detector        | Sentence-level experimental style markers with explanations                                                              | **No trained classifier, probability, or authorship determination**  |
-| Plagiarism checker | Exact normalized five-word source comparison and covered-word percentage                                                 | **Only the source supplied by the user; no internet or corpus scan** |
+| AI detector | Independent optional English transformer/window indicator, descriptive features and explicit abstention | Requires local/remote Python model service; uncalibrated research baseline, not proof of authorship |
+| Plagiarism checker | Winnowing, exact alignments, ranked sources, exclusions and opt-in repository matching | Searches supplied/device/tenant sources only; no licensed web or academic corpus |
 | Citation generator | APA 7 templates for webpages, books, and journal articles; one/two/three-plus author in-text forms; alphabetical library | Manual source details; verify source-specific APA rules              |
 | APA 7 lab          | Student/professional title pages, body, reference list, DOCX export                                                      | Experimental formatter, not an automatic rubric grade                |
 | Document import    | DOCX, text-based PDF, TXT; browser-side extraction and drag/drop                                                         | 10 MB / 100 PDF pages / 25,000 extracted characters; no OCR          |
 | Workspace          | Copy/download results, use result as draft, 20 recent results, local draft saving, clear data                            | Browser/device storage; no cross-device sync                         |
+
+## Independent detection upgrade
+
+The existing **AI detector** and **Plagiarism checker** names are retained. Similarity, embeddings and neural classification run independently, with scope/model metadata and no fabricated fallback percentage. The Python service is local by user preference; hosted neural/semantic results remain unavailable until a reachable private backend is configured. The web app still supports on-device fingerprint matching.
+
+- [Architecture, component design, phase map and production roadmap](docs/detection/ARCHITECTURE.md)
+- [Service setup, Docker Compose and deployment guide](services/detection/README.md)
+- [Evaluation and training-data strategy](docs/detection/EVALUATION.md)
+- [Verification results and remaining limits](docs/detection/VERIFICATION.md)
+
+Detection imports support PDF, DOCX, PPTX, HTML, RTF, TXT, MD and TEX through the service (local-only imports omit PPTX/RTF). Reports export JSON, HTML and service-rendered PDF. SkullBot Chat, local red proofreading squiggles and the 27-rule TurnitOFF workspace remain available.
 
 ## Product flow
 
@@ -51,7 +62,7 @@ Copy `.env.example` to `.dev.vars`, then set `OPENROUTER_API_KEY` locally. Do no
 npm run dev
 ```
 
-Open the Local URL printed by the server (normally `http://127.0.0.1:5173`). The Sites portable profile uses a local test identity. The app still supports local grammar, extractive summaries, citations, comparison, detector style analysis, and APA export without a key. Rewriting clearly reports missing configuration instead of fabricating a result.
+Open the Local URL printed by the server (normally `http://127.0.0.1:5173`). The Sites portable profile uses a local test identity. The app still supports local grammar, extractive summaries, citations, fingerprint comparison and APA export without a key. Rewriting clearly reports missing configuration instead of fabricating a result.
 
 ```sh
 npm run typecheck
@@ -69,7 +80,7 @@ React workspace
   ├─ Local storage: draft, citation library, bounded activity
   ├─ POST /api/write
   │    ├─ validated tool/mode/text
-  │    ├─ deterministic source comparison / style analysis
+  │    ├─ device fingerprinting / independent Python detection service
   │    └─ OpenRouter → selected pretrained model → edited text
   │         └─ local grammar / extractive summary when no key is set
   └─ POST /api/export
