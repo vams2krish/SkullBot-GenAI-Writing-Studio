@@ -1,4 +1,5 @@
 import { env } from "cloudflare:workers";
+import {transformText} from '@/lib/turnitoff/engine';
 import {
   grammar,
   summarize,
@@ -40,6 +41,10 @@ export async function POST(request: Request) {
         { status: 400 },
       );
     if (tool === "detector") return Response.json(detect(text));
+    if(tool==='humanizer'&&mode==='Rules (local)'){
+      const result=transformText(text);
+      return Response.json({text:result.text,label:'Deterministic rule pass · zero generative AI',notes:[`${result.changes.reduce((n,c)=>n+c.count,0)} substitutions; ${result.audit.protectedSpans} protected spans preserved.`,...result.warnings]});
+    }
     if (tool === "plagiarism") {
       if (
         typeof source !== "string" ||

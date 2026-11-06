@@ -1,4 +1,6 @@
 export type ToolId =
+  | "chat"
+  | "turnitoff"
   | "paraphraser"
   | "grammar"
   | "detector"
@@ -8,6 +10,7 @@ export type ToolId =
   | "citations"
   | "apa";
 export const tools = [
+  {id:"chat",name:"SkullBot Chat",short:"Start with a question.",description:"Ideas, explanations, and drafts — one conversation at a time.",modes:["Answer"],action:"Generate answer"},
   {
     id: "paraphraser",
     name: "Paraphraser",
@@ -53,9 +56,10 @@ export const tools = [
     name: "AI humanizer",
     short: "Find your natural voice.",
     description: "Less stiff. More you.",
-    modes: ["Basic", "Advanced"],
+    modes: ["Basic", "Advanced", "Rules (local)"],
     action: "Humanize",
   },
+  {id:"turnitoff",name:"TurnitOFF",short:"Rules. Review. Repeat.",description:"Deterministic transformations with protected content and a complete change log.",modes:["Rules"],action:"Apply rules"},
   {
     id: "summarizer",
     name: "Summarizer",

@@ -1,0 +1,11 @@
+{
+  "version": "1.0.0",
+  "note": "Source-organization labels, not a generated bibliography or source-validation service.",
+  "subjects": [
+    {"id":"cs-ai","name":"Computer science & AI","children":["Machine learning","Algorithms","Software engineering","Human-computer interaction"]},
+    {"id":"engineering-physics","name":"Engineering & physics","children":["Mechanical engineering","Electrical engineering","Materials","Applied physics"]},
+    {"id":"math-stats","name":"Mathematics & statistics","children":["Probability","Statistical inference","Optimization","Applied mathematics"]},
+    {"id":"quant-finance","name":"Quantitative finance","children":["Asset pricing","Risk modeling","Econometrics","Market microstructure"]},
+    {"id":"medical-life","name":"Medical & life sciences","children":["Clinical research","Epidemiology","Molecular biology","Public health"]}
+  ]
+}

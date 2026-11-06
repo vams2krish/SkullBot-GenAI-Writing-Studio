@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import {
   ArrowUpRight,
   ArrowRight,
@@ -44,7 +45,12 @@ import {
 } from "@/lib/writing";
 import { CitationPanel } from "@/components/citation-panel";
 import { ApaPanel } from "@/components/apa-panel";
+import { ChatWorkspace } from "@/components/chat-workspace";
+import { TurnitoffWorkspace } from "@/components/turnitoff-workspace";
+import { ProofEditor } from "@/components/proof-editor";
 const icons = {
+  chat: MessageCircle,
+  turnitoff: ShieldCheck,
   paraphraser: WandSparkles,
   grammar: SpellCheck,
   detector: ScanLine,
@@ -137,8 +143,8 @@ export function Mascot({ small = false }: { small?: boolean }) {
   );
 }
 export default function Home() {
-  const [active, setActive] = useState<ToolId>("paraphraser");
-  const [mode, setMode] = useState("Standard");
+  const [active, setActive] = useState<ToolId>("chat");
+  const [mode, setMode] = useState("Answer");
   const [text, setText] = useState("");
   const [source, setSource] = useState("");
   const [intensity, setIntensity] = useState(50);
@@ -163,6 +169,8 @@ export default function Home() {
   useEffect(() => {
     try {
       const stored = JSON.parse(localStorage.getItem("skullbot:v1") || "{}");
+      // Browser storage must be restored after SSR, before persistence is enabled.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       if (typeof stored.text === "string") setText(stored.text);
       if (Array.isArray(stored.history))
         setHistory(stored.history.slice(0, 20));
@@ -219,7 +227,8 @@ export default function Home() {
     setBusy(true);
     setResult(null);
     try {
-      const response = await fetch("/api/write", {
+      const localRules = active==='humanizer'&&mode==='Rules (local)';
+      const response = localRules ? await (async()=>{const {transformText}=await import('@/lib/turnitoff/engine');const r=transformText(text);return Response.json({text:r.text,label:'Local deterministic rule pass · zero generative AI',notes:[`${r.changes.reduce((n,c)=>n+c.count,0)} substitutions; ${r.audit.protectedSpans} protected spans preserved.`,...r.warnings]})})() : await fetch("/api/write", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text, tool: active, mode, intensity, source }),
@@ -334,12 +343,12 @@ export default function Home() {
   return (
     <div className="app-shell">
       <aside className={"sidebar " + (menu ? "open" : "")}>
-        <a className="brand" href="/" aria-label="SkullBot home">
+        <Link className="brand" href="/" aria-label="SkullBot home">
           <img src="/favicon.svg" alt="" />
           <span>
             skullbot<span className="brand-dot">.</span>
           </span>
-        </a>
+        </Link>
         <div className="workspace-label">
           YOUR WORKSPACE <span>01</span>
         </div>
@@ -426,7 +435,7 @@ export default function Home() {
             </button>
           </div>
         </header>
-        <div className="page-content">
+        <div className={"page-content "+(active==="chat"?"chat-page":active==="turnitoff"?"workbench-page":"")}>
           <section className="intro">
             <div>
               <div className="eyebrow">
@@ -471,7 +480,7 @@ export default function Home() {
             </div>
           </section>
           <section className="quick-tools" aria-label="Choose a writing tool">
-            {tools.slice(0, 4).map((t) => {
+            {tools.filter(t=>!['chat','turnitoff'].includes(t.id)).slice(0, 4).map((t) => {
               const I = icons[t.id];
               return (
                 <button
@@ -506,7 +515,7 @@ export default function Home() {
                   <p>{tool.description}</p>
                 </div>
               </div>
-              <button
+              {!['chat','turnitoff'].includes(active)&&<button
                 className="text-button"
                 onClick={() => {
                   edit("");
@@ -516,9 +525,9 @@ export default function Home() {
               >
                 <Plus size={15} />
                 New draft
-              </button>
+              </button>}
             </div>
-            {active === "citations" ? (
+            {active === "chat" ? <ChatWorkspace copy={copy}/> : active === "turnitoff" ? <TurnitoffWorkspace citations={citations} setCitations={setCitations} copy={copy}/> : active === "citations" ? (
               <CitationPanel
                 citations={citations}
                 setCitations={setCitations}
@@ -597,15 +606,13 @@ export default function Home() {
                           </button>
                         </div>
                       </div>
-                      <textarea
-                        aria-label="Your text"
+                      <ProofEditor
                         value={text}
-                        onChange={(e) => edit(e.target.value)}
+                        onChange={edit}
                         maxLength={25000}
                         placeholder={
                           "Your next great sentence starts here.\nPaste your text, or drop a document in."
                         }
-                        spellCheck={false}
                       />
                       {!text && (
                         <div className="input-empty-actions">
@@ -994,7 +1001,7 @@ export default function Home() {
                       setHistory([]);
                       setCitations([]);
                       edit("");
-                      localStorage.removeItem("skullbot:v1");
+                      localStorage.removeItem("skullbot:v1");localStorage.removeItem("skullbot:chat:v1");window.dispatchEvent(new Event("skullbot:clear"));
                       setNotice("Workspace data cleared.");
                       setModal(null);
                     }}
@@ -1043,3 +1050,4 @@ export default function Home() {
     </div>
   );
 }
+
