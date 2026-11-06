@@ -36,7 +36,7 @@ export function transformDocxXml(xml:string,options:Options=defaultOptions){
  const result=xml.replace(/<w:p\b[^>]*>[\s\S]*?<\/w:p>/g,paragraph=>{
   const runs=[...paragraph.matchAll(/<w:t\b[^>]*>([\s\S]*?)<\/w:t>/g)];const plain=runs.map(r=>decode(r[1])).join('');
   // Run boundaries can bisect a quote/citation. Leave those whole paragraphs untouched rather than guessing a mapping.
-  if(/[\\$\[\]“”"(){}]/.test(plain)||/<(?:m:|w:(?:instrText|fldChar|fldSimple|hyperlink|del|ins|drawing|object))\b/.test(paragraph)){skipped++;return paragraph;}
+  if(options.protectedTerms.some(term=>term.trim()&&plain.toLowerCase().includes(term.toLowerCase()))||/[\\$\[\]“”"(){}]/.test(plain)||/<(?:m:|w:(?:instrText|fldChar|fldSimple|hyperlink|del|ins|drawing|object))\b/.test(paragraph)){skipped++;return paragraph;}
   return paragraph.replace(/(<w:t\b[^>]*>)([\s\S]*?)(<\/w:t>)/g,(whole,start,body,end)=>{const original=decode(body);const t=transformText(original,options);if(t.text===original)return whole;count+=t.changes.reduce((n,c)=>n+c.count,0);return start+encode(t.text)+end;});
  });
  if(XMLValidator.validate(result)!==true)throw Error('Word XML audit failed. Original retained.');
